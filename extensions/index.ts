@@ -4,6 +4,7 @@ import type { JsonValue, PolicyDocument, StateDocument } from "../kernel/types.t
 import { capabilityInvariant, type CapabilityValue } from "./capability.ts";
 import { registerDecisionRules } from "./decision.ts";
 import { registerIdentityRules } from "./identity.ts";
+import { registerCoinRules } from "./coin.ts";
 
 export * from "./capability.ts";
 export * from "./reservation.ts";
@@ -11,6 +12,7 @@ export * from "./commitment.ts";
 export * from "./outcome.ts";
 export * from "./decision.ts";
 export * from "./identity.ts";
+export * from "./coin.ts";
 
 /**
  * Genesis helper: policy documents can only enter a Domain at genesis or
@@ -53,6 +55,7 @@ export function standardInterpreter(): PolicyInterpreter {
   registerCapabilityRules(interpreter);
   registerDecisionRules(interpreter);
   registerIdentityRules(interpreter);
+  registerCoinRules(interpreter);
   return interpreter;
 }
 

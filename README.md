@@ -210,6 +210,44 @@ and ship a conformance suite for it - then diversity is free again, because `d =
 is a property of the specification rather than a hope about implementers. See
 `docs/amendment-ambiguity.md`.
 
+## A-Coin
+
+A-Coin is the framework's own unit of account: a higher-level **state schema**, not
+a kernel primitive, exactly as the freeze requires. What matters is not the schema -
+a balance is a number - but the invariant it carries:
+
+> **The total supply is a shared uniqueness invariant.**
+
+Conservation is enforced twice: a `coin-supply-preserving-effect` policy rule
+refuses a transfer that creates or destroys value, and a `checkCoinSupply` ledger
+invariant requires supply to be exactly `genesis + issued - burned`, recognising
+issuance only under the `mint` policy. Issuance under any other policy is reported
+as a leak.
+
+**The same mint policy text double-counts across two independent domains.** Each
+ledger satisfies its own supply invariant, and agent-x appears to hold 200 AC when
+the intended supply is 100. One shared domain refuses the second issue. That is the
+freeze's condition for shared state, satisfied:
+
+> A shared uniqueness invariant requires a shared semantic domain.
+
+**A-Coin is therefore the reason to build the chain.** Every other schema here -
+commitments, capabilities, outcomes, identities - works fine inside one domain. The
+supply does not.
+
+It is also the instrument. Escrow 300 AC per decision, cost model release 1.00 /
+deny 0.05 / failure 0.10:
+
+| configuration | false AFFIRM | expected loss per decision |
+|---------------|--------------|----------------------------|
+| 7 validators k=4, correlated | 20.9% | 31.35 AC |
+| qwen2.5:1.5b as judge | 16.7% | 25.00 AC |
+| decision-4b as judge | 8.3% | **12.50 AC** |
+| 3 validators k=2, independent | 6.3% | 9.45 AC |
+
+Nothing new is measured; the whole repository's results simply become legible in
+one unit. See `docs/a-coin.md`.
+
 ## Current Normative State
 
 The repository carries the **ATP-0002 freeze**, which reduces the kernel again,
@@ -289,6 +327,7 @@ casually.
 │   ├── validator-quorum.md      what a quorum's safety actually depends on
 │   ├── meta-consensus.md        semantic amendment, and why it is worse
 │   ├── amendment-ambiguity.md   what d = 0 would take, measured
+│   ├── a-coin.md                the built-in unit of account
 │   ├── open-problems.md
 │   └── history/                 superseded candidate-era documents
 ├── conformance/                 ATP-0002 conformance suite
@@ -306,6 +345,7 @@ casually.
 │   ├── validator-quorum/        correlated validator failure
 │   ├── meta-consensus/          semantic amendment under a quorum
 │   ├── amendment-ambiguity/     the ambiguity budget of a specification
+│   ├── a-coin/                  A-Coin conservation and the shared invariant
 ├── chain/                       single-writer chain skeleton and selectors
 │   └── results/                 generated reports
 ├── proposals/
