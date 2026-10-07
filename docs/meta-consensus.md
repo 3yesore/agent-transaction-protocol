@@ -123,4 +123,7 @@ risk - and both get worse as the object level gets better.
   the persistence result;
 - an amendment procedure with d = 0 - unambiguous enough that independent readers
   cannot diverge - which would break the divergence trade-off and make diversity
-  free again.
+  free again. **Addressed in @@docs/amendment-ambiguity.md@@**, which turns this
+  falsifier into a measurement: a specification is three-valued, and the fraction
+  it does not decide is d. Seven explicit clauses take an authored corpus from
+  91.7% undetermined to 0%.

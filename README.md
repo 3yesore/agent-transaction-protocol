@@ -169,6 +169,47 @@ reducing the shared-cause rate of one implementation, and designing an amendment
 procedure unambiguous enough that independent readers cannot diverge on it. See
 `docs/meta-consensus.md`.
 
+## The Ambiguity Budget of an Amendment Specification
+
+A specification does not have to be wrong to fork a chain. It only has to be silent.
+So the amendment decision function is three-valued - valid, invalid,
+**undetermined** - and `d`, the fraction it does not decide, is exactly where two
+honest clients diverge.
+
+Seven clauses take an authored corpus of 12 defective amendments from 91.7%
+undetermined to 0%, without rejecting the conforming case:
+
+| spec | clauses | undetermined | d |
+|------|---------|--------------|---|
+| minimal | 0 | 11 | 91.7% |
+| + pre-state authorization | 1 | 8 | 66.7% |
+| + precondition match | 2 | 7 | 58.3% |
+| + closed vocabulary | 3 | 6 | 50.0% |
+| + type checking | 4 | 5 | 41.7% |
+| + reject unknown fields | 5 | 4 | 33.3% |
+| + value range | 6 | 3 | 25.0% |
+| + canonical encoding | 7 | **0** | **0.0%** |
+
+Two findings matter more than the numbers.
+
+**The kernel's own rule is an ambiguity class.** Under a specification that leaves
+pre-state evaluation implicit, an amendment naming the *successor's* semantics as
+its authoriser is not invalid - it is **undetermined**. The most important case in
+the framework is undecided rather than forbidden. One clause closes it, along with
+authorisation that is absent and authorisation that points somewhere unrelated.
+
+**Encoding alone can fork a chain.** Three amendments with identical meaning and
+different bytes - key order, duplicate key, whitespace - are all undetermined
+without a canonical-encoding clause. Canonical encoding is part of the amendment
+procedure, not a serialization preference.
+
+This is the constructive counterpart to the meta-consensus result: it gives the
+chain a design obligation rather than a hope. Publish the amendment procedure as a
+total function over a canonical encoding, state pre-state evaluation explicitly,
+and ship a conformance suite for it - then diversity is free again, because `d = 0`
+is a property of the specification rather than a hope about implementers. See
+`docs/amendment-ambiguity.md`.
+
 ## Current Normative State
 
 The repository carries the **ATP-0002 freeze**, which reduces the kernel again,
@@ -247,6 +288,7 @@ casually.
 │   ├── judge-evaluation.md      why accuracy is the wrong metric for a judge
 │   ├── validator-quorum.md      what a quorum's safety actually depends on
 │   ├── meta-consensus.md        semantic amendment, and why it is worse
+│   ├── amendment-ambiguity.md   what d = 0 would take, measured
 │   ├── open-problems.md
 │   └── history/                 superseded candidate-era documents
 ├── conformance/                 ATP-0002 conformance suite
@@ -263,6 +305,8 @@ casually.
 │   ├── reduction/               the freeze kernel as code, and the audit
 │   ├── validator-quorum/        correlated validator failure
 │   ├── meta-consensus/          semantic amendment under a quorum
+│   ├── amendment-ambiguity/     the ambiguity budget of a specification
+├── chain/                       single-writer chain skeleton and selectors
 │   └── results/                 generated reports
 ├── proposals/
 ├── prompts/
