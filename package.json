@@ -3,16 +3,17 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Agent Transaction Protocol (ATP) v0.2 candidate - four-primitive kernel (State, Transition, Policy, Evidence) with a zero-dependency reference implementation and an executable adversarial review record.",
+  "description": "Agent Transaction Protocol (ATP) - the ATP-0002 state-evolution kernel, a zero-dependency reference implementation, an executable adversarial review, a judge benchmark, a kernel reduction audit, and an ATP-0002 conformance suite.",
   "license": "MIT",
   "engines": {
     "node": ">=22.6"
   },
   "scripts": {
-    "test": "node --test test/kernel.test.ts test/invariants.test.ts test/experiments.test.ts test/judge-bench.test.ts test/reduction.test.ts",
+    "test": "node --test test/kernel.test.ts test/invariants.test.ts test/experiments.test.ts test/judge-bench.test.ts test/reduction.test.ts test/conformance.test.ts",
     "experiments": "node experiments/v0.2-review/run.ts",
     "bench": "node experiments/judge-bench/run.ts",
     "reduction": "node experiments/reduction/run.ts",
-    "verify": "npm run experiments && npm test"
+    "conformance": "node conformance/run.ts",
+    "verify": "npm run experiments && npm run reduction && npm run conformance && npm test"
   }
 }

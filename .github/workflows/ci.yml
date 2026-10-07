@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ["24"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Environment
+        run: |
+          node --version
+          echo "no dependencies to install: the sources run directly under node"
+
+      - name: Test suite
+        run: npm test
+
+      - name: Adversarial review cases
+        run: npm run experiments
+
+      - name: Kernel reduction audit
+        run: npm run reduction
+
+      - name: ATP-0002 conformance
+        run: npm run conformance
+
+      - name: Judge benchmark
+        run: npm run bench
+        # Deliberately runs without Ollama. The benchmark reports that no model was
+        # available and still asserts its own framework claims, so CI stays hermetic.

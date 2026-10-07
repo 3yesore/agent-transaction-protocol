@@ -39,6 +39,30 @@ Domain it belongs to, and a transition must be confined to exactly one Domain.
 | Who may change a policy? | The policy itself, under a version pin, or @@policy/authority@@. Never a bare transition. |
 | Can a Domain be exited? | Yes. History is content addressed and portable; authority is not, and must be re-recognized. |
 
+## Resolution: what `D` is
+
+The ATP-0002 freeze writes the kernel as `D = (S0, R0)` while RFC 6 says a domain
+is "not a universal kernel object", and `protocol.json` lists `domain` under
+`derived_or_higher_level`. That reads as a contradiction. It is only a
+contradiction if "not a kernel object" is read as "not a kernel term".
+
+The resolution:
+
+- `D` **is** the kernel's subject. The kernel model is a statement about a
+  domain instance: it has an initial semantic state and a relation.
+- There is no **global** domain object: no root domain, no canonical registry, no
+  object that all domains are instances of in the type sense. A domain is created
+  by being given an `(S0, R0)`, nothing more.
+- `domain` appears under `derived_or_higher_level` in the manifest because the
+  manifest lists *what you do not need to provide to the kernel*, not what the
+  kernel talks about.
+
+So `D` should be read as a bindable variable, not as a primitive. If the freeze
+wants to avoid the ambiguity, the cleanest edit is to add one line to RFC 2: "D
+is a domain instance; the kernel does not define a global domain object."
+
+This repository's `Domain` class in `kernel/domain.ts` is one such instance.
+
 ## Why not a primitive
 
 A Domain introduces no new mechanism. It is the name for the scope that the

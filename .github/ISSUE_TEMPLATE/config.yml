@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Read the reduction audit first
+    url: https://github.com/3yesore/agent-transaction-protocol/blob/main/docs/kernel-reduction-audit.md
+    about: The kernel is one rule plus a free relation. Check whether your case is already covered by its three falsifiers.

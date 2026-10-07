@@ -69,6 +69,29 @@ The sixteen review cases behind the v0.2 reduction were prose assertions, four i
 
 All twenty-three cases pass in `experiments/results/v0.2-review.md`. See `experiments/README-v0.2.md` for the full index and `docs/identity-and-cost.md` for the identity economics.
 
+## ATP-0002 Conformance
+
+Because the freeze's kernel is exactly one rule, a conformance suite for it is
+five behavioural probes:
+
+| Probe | Requirement it tests |
+|-------|---------------------|
+| P1 genesis | SPEC 2 - an initial semantic state |
+| **P2 pre-state evaluation** | SPEC 4 - a semantic change is recognised under the semantics it replaces |
+| P3 permitted evolution | SPEC 4 - semantics may evolve |
+| P4 ordinary transition | SPEC 2 - the target is not rejecting everything |
+| P5 determinism | SPEC 2 - the same state, input, context and successor have one verdict |
+
+The suite ships a **test oracle and four mutants**, so a green run is meaningful:
+the real `kernel/` implementation passes 5/5, an abstract control passes, and
+each mutant fails exactly the probe it should - successor evaluation and
+permissive semantics fail P2, refusing semantics fails P3 and P4, and a
+history-dependent relation fails P5. No mutant conforms.
+
+What this establishes is conformance to the one rule, not correctness. A target
+can pass all five probes and still lose all your money. What it cannot do is pass
+and then let a domain rewrite its own semantics. See `conformance/report.md`.
+
 ## Current Normative State
 
 The repository carries the **ATP-0002 freeze**, which reduces the kernel again,
@@ -123,32 +146,42 @@ casually.
 ├── SPEC.md                      Kernel v0.2 (ATP-0002 freeze)
 ├── SPEC-v0.1-historical.md      Kernel v0.1 (frozen baseline)
 ├── SPEC-v0.2-candidate.md       the four-primitive intermediate
-├── protocol.json
+├── protocol.json                ATP-0002 kernel manifest
 ├── protocol-v0.2-candidate.json
 ├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
 ├── RFC/
-│   ├── ATP-0001-kernel-baseline.md          frozen baseline
-│   ├── ATP-0002-v0.2-kernel-reduction.md    the reduction this code implements
-│   └── ATP-0003-cross-agent-coordination.md extension protocol
+│   ├── ATP-0001-kernel-baseline.md           frozen v0.1 baseline
+│   ├── ATP-0002-state-evolution-kernel.md    the current kernel (freeze)
+│   └── ATP-0003-cross-agent-coordination.md  extension protocol
 ├── docs/
+│   ├── kernel-reduction-audit.md   the kernel is one rule, not eight constraints
+│   ├── freeze-reconciliation.md    freeze <-> implementation, and five defects
+│   ├── ATP-0002-stage-freeze.md    the frozen conclusions and next boundary
+│   ├── kernel-reduction-research.md
 │   ├── architecture.md
 │   ├── evolution.md
-│   ├── evolution-v0.2.md
-│   ├── semantics-v0.2.md
 │   ├── implementation.md        how the code maps to the candidate
-│   ├── domain.md                State Domain, a defined kernel term
-│   ├── policy-as-state.md       the I10 representation
+│   ├── domain.md                State Domain, and what D is
+│   ├── policy-as-state.md       the candidate's I10 representation
 │   ├── decision-schema.md       Decision as an Evidence schema
-│   ├── identity-and-cost.md     identity, stake, and what collusion costs
 │   ├── decision-provider.md     the seam between protocol state and an evaluator
-│   └── open-problems.md
+│   ├── identity-and-cost.md     identity, stake, and what collusion costs
+│   ├── judge-evaluation.md      why accuracy is the wrong metric for a judge
+│   ├── open-problems.md
+│   └── history/                 superseded candidate-era documents
+├── conformance/                 ATP-0002 conformance suite
+│   ├── report.md                generated
+│   ├── adapter.ts  probes.ts  targets.ts  run.ts
 ├── kernel/                      State, Transition, Policy, Evidence
-├── extensions/                  capability, reservation, commitment, outcome, decision
+├── extensions/                  capability, reservation, commitment, outcome, decision, identity
 ├── experiments/
 │   ├── README.md
 │   ├── README-v0.2.md           the review index
 │   ├── harness.ts
-│   ├── v0.2-review/             sixteen executable cases
+│   ├── v0.2-review/             twenty-three executable cases
+│   ├── judge-bench/             judge quality measured against protocol outcome
+│   ├── reduction/               the freeze kernel as code, and the audit
 │   └── results/                 generated reports
 ├── proposals/
 ├── prompts/

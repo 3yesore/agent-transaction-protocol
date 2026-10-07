@@ -1,0 +1,78 @@
+name: Counterexample
+description: A concrete case that the current kernel, spec, or implementation cannot handle.
+title: "[counterexample] "
+labels: ["counterexample"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The project's contribution guidance asks for a concrete failure case over a
+        broad objection. Please fill in all nine fields: an unfilled field is itself
+        useful information, but say so explicitly rather than leaving it blank.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete behavior cannot be represented, or is unsafe?
+    validations:
+      required: true
+  - type: textarea
+    id: actors
+    attributes:
+      label: Actors
+      description: Who participates, and what does each control?
+    validations:
+      required: true
+  - type: textarea
+    id: initial-state
+    attributes:
+      label: Initial state
+    validations:
+      required: true
+  - type: textarea
+    id: actions
+    attributes:
+      label: Actions
+      description: The sequence of transitions, with who performs each.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed result
+      description: If you ran it, paste the actual output.
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: Failure
+      description: Exactly where does the representation break?
+    validations:
+      required: true
+  - type: dropdown
+    id: classification
+    attributes:
+      label: Classification
+      description: See docs/evolution.md for the definitions.
+      options:
+        - KERNEL - cannot be represented without a new primitive or changed semantics
+        - EXTENSION - needs a higher-level schema or protocol
+        - AGENT - the protocol can express it; the agent behaves poorly
+        - ENVIRONMENT - oracle, clock, or network limitation
+        - UNSURE
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-change
+    attributes:
+      label: Proposed change
+      description: The smallest semantic modification you think would fix it, if any.
+    validations:
+      required: false

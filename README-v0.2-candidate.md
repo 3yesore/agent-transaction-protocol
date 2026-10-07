@@ -38,4 +38,4 @@ Commitments, capabilities, outcomes, settlement, currency, reputation, governanc
 
 v0.2 is a candidate produced by adversarial review, not a final specification. It must still be attacked before becoming the next frozen baseline.
 
-See `SPEC-v0.2-candidate.md`, `RFC/ATP-0002-v0.2-kernel-reduction.md`, `docs/semantics-v0.2.md`, and `experiments/README-v0.2.md`.
+See `SPEC-v0.2-candidate.md`, `docs/history/ATP-0002-candidate-kernel-reduction.md`, `docs/history/semantics-v0.2.md`, and `experiments/README-v0.2.md`.

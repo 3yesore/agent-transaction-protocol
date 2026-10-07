@@ -72,6 +72,22 @@ because silently editing a frozen baseline is exactly what the project forbids.
    frozen conclusion; it is now `ATP-0002-state-evolution-kernel`. A published
    number should not be reassigned.
 
+## Resolution status in this repository
+
+The five defects above are in the **freeze archive**, not in this repository, and
+this repository does not silently rewrite a frozen baseline. What was done here:
+
+| Defect | Status here |
+|--------|-------------|
+| 1. README tree stale | not applicable - this repository keeps its own README, and its tree is current |
+| 2. README open problems stale | not applicable to the freeze's README; `docs/open-problems.md` here is the live list |
+| 3. README status stale | not applicable for the same reason |
+| 4. `D` is used while `domain` is declared derived | **resolved here** by `docs/domain.md`: `D` is the kernel's subject, but there is no global domain object |
+| 5. RFC 0002 reused | **resolved here**: `RFC/` now holds 0001, 0002 (state evolution) and 0003 only; the candidate-era reduction RFC moved to `docs/history/ATP-0002-candidate-kernel-reduction.md` with its superseded status |
+
+Defects 2 and 3 are still worth fixing upstream, because the freeze archive is
+what a new reader receives first.
+
 ## Suggested wording changes
 
 Because `docs/kernel-reduction-audit.md` establishes that only one constraint
