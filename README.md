@@ -94,6 +94,41 @@ What this establishes is conformance to the one rule, not correctness. A target
 can pass all five probes and still lose all your money. What it cannot do is pass
 and then let a domain rewrite its own semantics. See `conformance/report.md`.
 
+## Validator Quorum Under Correlated Failure
+
+A chain's validators run the same client, so they fail together. This measures what a
+quorum's safety actually depends on, with two error sources separated on purpose: a
+shared cause that flips a whole client family, and independent noise.
+
+**False acceptance is floored at the shared-cause rate.** At rho = 0.2, seven
+same-family validators sit at 20.9% and thirty-one sit at 20.1% - validator count does
+not move it. The floor is set by the **largest family**, not the number of families:
+splitting seven validators at k=4 into 4+3 leaves the floor unchanged *and* makes it
+measurably worse (20.9% to 28.4%), because a three-member cause plus one independent
+flip now also reaches the threshold.
+
+| rho | n=1 | n=3 (k=2) | n=5 (k=3) | n=7 (k=4) |
+|-----|-----|-----------|-----------|-----------|
+| 0.00 | 15.1% | 6.3% | 2.6% | 1.2% |
+| 0.20 | 32.3% | 25.3% | 22.1% | 20.9% |
+| 0.50 | 57.9% | 53.4% | 51.4% | 50.6% |
+
+Design rules that fell out:
+
+1. **No client family may hold at least as many validators as the threshold.**
+2. The floor is a bound, not a prediction - tight only when one family can carry the
+   threshold alone, loose where causes must combine.
+3. Diversity de-correlates but does not reduce the marginal error rate,
+   rho + (1-rho)p. At full diversity the residual is that rate's binomial tail.
+4. Threshold is not a strictness parameter: unanimity quadruples false rejections for
+   almost no safety gain at moderate correlation.
+5. Diversity and size must be raised together. 5 diverse validators give 19.2%;
+   35 diverse validators give 1.6%.
+
+Consequence: **a chain's safety claim cannot come from ATP-0002 and cannot come from
+validator count or stake. It comes from implementation diversity, which is an
+ecosystem property.** See `docs/validator-quorum.md`.
+
 ## Current Normative State
 
 The repository carries the **ATP-0002 freeze**, which reduces the kernel again,
@@ -170,6 +205,7 @@ casually.
 │   ├── decision-provider.md     the seam between protocol state and an evaluator
 │   ├── identity-and-cost.md     identity, stake, and what collusion costs
 │   ├── judge-evaluation.md      why accuracy is the wrong metric for a judge
+│   ├── validator-quorum.md      what a quorum's safety actually depends on
 │   ├── open-problems.md
 │   └── history/                 superseded candidate-era documents
 ├── conformance/                 ATP-0002 conformance suite
@@ -184,6 +220,7 @@ casually.
 │   ├── v0.2-review/             twenty-three executable cases
 │   ├── judge-bench/             judge quality measured against protocol outcome
 │   ├── reduction/               the freeze kernel as code, and the audit
+│   ├── validator-quorum/        correlated validator failure
 │   └── results/                 generated reports
 ├── proposals/
 ├── prompts/

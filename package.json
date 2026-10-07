@@ -9,11 +9,12 @@
     "node": ">=22.6"
   },
   "scripts": {
-    "test": "node --test test/kernel.test.ts test/invariants.test.ts test/experiments.test.ts test/judge-bench.test.ts test/reduction.test.ts test/conformance.test.ts",
+    "test": "node --test test/kernel.test.ts test/invariants.test.ts test/experiments.test.ts test/judge-bench.test.ts test/reduction.test.ts test/conformance.test.ts test/validator-quorum.test.ts",
     "experiments": "node experiments/v0.2-review/run.ts",
     "bench": "node experiments/judge-bench/run.ts",
     "reduction": "node experiments/reduction/run.ts",
     "conformance": "node conformance/run.ts",
-    "verify": "npm run experiments && npm run reduction && npm run conformance && npm test"
+    "quorum": "node experiments/validator-quorum/run.ts",
+    "verify": "npm run experiments && npm run reduction && npm run conformance && npm run quorum && npm test"
   }
 }
