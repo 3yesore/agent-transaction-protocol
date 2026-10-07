@@ -1,8 +1,7 @@
 import { hashJson } from "./json.ts";
-import { createDecision, decisionsForSubject, type DecisionInput } from "./decision.ts";
 import { createEvidence, type EvidenceInput } from "./evidence.ts";
 import { recordHash, verifyChain, type ChainCheck, type TransitionRecordBase } from "./ledger.ts";
-import { PolicyRegistry } from "./policy.ts";
+import { AUTHORITY_POLICY_ID, PolicyInterpreter, isPolicyKey, policyIdOf, policyKey, resolvePolicy } from "./policy.ts";
 import {
   applyEffects,
   checkPreconditions,
@@ -13,7 +12,6 @@ import {
 } from "./state.ts";
 import type {
   AttemptRecord,
-  DecisionRecord,
   EvidenceRecord,
   EvidenceVerifier,
   FailureKind,
@@ -29,11 +27,16 @@ import type {
 
 export interface DomainConfig {
   readonly id: string;
-  readonly policies: PolicyRegistry;
+  /** Owns the rule vocabulary; the policy documents themselves live in state. */
+  readonly interpreter: PolicyInterpreter;
   readonly verifier: EvidenceVerifier;
   readonly preconditions?: PreconditionResolver;
-  /** Injected clock; experiments use it to make time deterministic. */
   readonly clock?: () => number;
+  /**
+   * Genesis state. Policy documents MUST be seeded here: a policy can only be
+   * created at genesis or by policy/authority (see I10), never by a bare
+   * transition.
+   */
   readonly initialState?: readonly StateDocument[];
 }
 
@@ -44,7 +47,7 @@ export interface Failure {
 
 export interface ProposeResult {
   readonly committed: boolean;
-  readonly policyResult: PolicyResult;
+  readonly policyResult: PolicyResult | null;
   readonly record?: TransitionRecord;
   readonly failure?: Failure;
 }
@@ -61,7 +64,9 @@ function validateProposal(proposal: TransitionProposal): string | null {
   if (typeof proposal.domain !== "string" || proposal.domain.length === 0) return "proposal.domain must be a non-empty string";
   if (typeof proposal.actor !== "string" || proposal.actor.length === 0) return "proposal.actor must be a non-empty string";
   if (typeof proposal.intent !== "string") return "proposal.intent must be a string";
-  if (!proposal.policy || typeof proposal.policy.id !== "string") return "proposal.policy.id must be a string";
+  if (!proposal.policy || typeof proposal.policy.id !== "string" || proposal.policy.id.length === 0) {
+    return "proposal.policy.id must be a non-empty string naming a policy document";
+  }
   if (!Array.isArray(proposal.preconditions)) return "proposal.preconditions must be an array";
   if (!Array.isArray(proposal.effects)) return "proposal.effects must be an array";
   if (!Array.isArray(proposal.evidence)) return "proposal.evidence must be an array";
@@ -81,67 +86,65 @@ function validateProposal(proposal: TransitionProposal): string | null {
 }
 
 /**
- * A Domain is one independently governed ATP state space with its own ledger.
+ * A State Domain is the authority and atomicity scope of the v0.2 kernel.
  *
- * The kernel guarantees intra-domain atomicity: a proposal either commits every
- * effect and appends exactly one transition record, or it changes nothing.
- * Cross-domain atomicity is deliberately NOT provided here; see
- * experiments/exp-001.
+ * It is a DEFINED kernel term, not a primitive: I3 (domain-scoped authority),
+ * I5 (local recognition), and I8 (domain-scoped atomicity) are all statements
+ * about a Domain. A Domain owns one ledger and one state space, and no
+ * transition spans two domains.
  */
 export class Domain {
   readonly id: string;
-  #policies: PolicyRegistry;
+  #interpreter: PolicyInterpreter;
   #verifier: EvidenceVerifier;
   #preconditions?: PreconditionResolver;
   #clock: () => number;
-  #initial: readonly StateDocument[];
+  #genesis: readonly StateDocument[];
   #snapshot: StateSnapshot;
   #ledger: TransitionRecord[] = [];
   #evidence = new Map<Hash, EvidenceRecord>();
-  #decisions = new Map<Hash, DecisionRecord>();
   #attempts: AttemptRecord[] = [];
   #seen = new Set<string>();
 
   constructor(config: DomainConfig) {
     this.id = config.id;
-    this.#policies = config.policies;
+    this.#interpreter = config.interpreter;
     this.#verifier = config.verifier;
     this.#preconditions = config.preconditions;
     this.#clock = config.clock ?? (() => Date.now());
-    this.#initial = config.initialState ?? [];
-    this.#snapshot = config.initialState ? snapshotFrom(this.id, config.initialState) : emptySnapshot(this.id);
+    this.#genesis = config.initialState ?? [];
+    this.#snapshot = config.initialState ? snapshotFrom(this.id, this.#genesis) : emptySnapshot(this.id);
   }
 
   get state(): StateSnapshot {
     return this.#snapshot;
   }
-
   get ledger(): readonly TransitionRecord[] {
     return this.#ledger;
   }
-
   get attempts(): readonly AttemptRecord[] {
     return this.#attempts;
   }
-
   get head(): TransitionRecord | null {
     return this.#ledger.length ? this.#ledger[this.#ledger.length - 1] : null;
   }
-
+  get genesis(): readonly StateDocument[] {
+    return this.#genesis;
+  }
   get verifier(): EvidenceVerifier {
     return this.#verifier;
   }
-
-  get policies(): PolicyRegistry {
-    return this.#policies;
+  get interpreter(): PolicyInterpreter {
+    return this.#interpreter;
   }
-
   now(): number {
     return this.#clock();
   }
-
   document(key: StateKey): StateDocument | undefined {
     return this.#snapshot.documents.get(key);
+  }
+  policyDocument(id: string): StateDocument | undefined {
+    return this.#snapshot.documents.get(policyKey(id));
   }
 
   publishEvidence(input: EvidenceInput): EvidenceRecord {
@@ -150,28 +153,19 @@ export class Domain {
     return record;
   }
 
-  publishDecision(input: DecisionInput): DecisionRecord {
-    const record = createDecision(input);
-    this.#decisions.set(record.id, record);
-    return record;
-  }
-
+  /** Evidence is the only epistemic store in v0.2; judgments are a kind of it. */
   evidenceLog(): EvidenceRecord[] {
     return [...this.#evidence.values()];
   }
 
-  decisionLog(): DecisionRecord[] {
-    return [...this.#decisions.values()];
+  evidenceOfKind(kind: string): EvidenceRecord[] {
+    return this.evidenceLog().filter((e) => e.kind === kind);
   }
 
-  decisionsAbout(subject: Hash): DecisionRecord[] {
-    return decisionsForSubject(this.#decisions.values(), subject);
+  evidenceAbout(subject: Hash): EvidenceRecord[] {
+    return this.evidenceLog().filter((e) => e.about === subject);
   }
 
-  /**
-   * Full pipeline: shape -> domain -> replay guard -> evidence -> decisions ->
-   * policy -> effects -> ledger append.
-   */
   propose(proposal: TransitionProposal): ProposeResult {
     const now = this.#clock();
     const shapeError = validateProposal(proposal);
@@ -184,23 +178,26 @@ export class Domain {
     }
 
     const proposalHash = hashJson(proposal);
-    const evidence: EvidenceRecord[] = [];
+
+    const referenced: EvidenceRecord[] = [];
     for (const id of proposal.evidence) {
       const record = this.#evidence.get(id);
       if (!record) return this.#fail(proposal, "EVIDENCE", "unknown evidence reference: " + id, now);
-      evidence.push(record);
+      referenced.push(record);
     }
-    const decisions = decisionsForSubject(this.#decisions.values(), proposalHash);
+    // A proposal cannot hide evidence addressed to it.
+    const addressed = this.evidenceAbout(proposalHash);
+    const byId = new Map<Hash, EvidenceRecord>();
+    for (const record of [...referenced, ...addressed]) byId.set(record.id, record);
+    const evidence = [...byId.values()];
 
-    const policy = this.#policies.create(proposal.policy.id, proposal.policy.params);
-    if (!policy) {
-      return this.#fail(proposal, "POLICY_UNKNOWN", "no policy registered under id " + proposal.policy.id, now);
+    const resolution = resolvePolicy(this.#snapshot, this.#interpreter, proposal.policy, now);
+    if (!resolution.ok) {
+      return this.#fail(proposal, resolution.kind, resolution.reason, now);
     }
 
-    const preconditionFailure = checkPreconditions(this.#snapshot, proposal.preconditions, this.#preconditions);
-    if (preconditionFailure) {
-      return this.#fail(proposal, "PRECONDITION", preconditionFailure.detail, now);
-    }
+    const amendmentFailure = this.#checkPolicyAmendment(proposal);
+    if (amendmentFailure) return this.#fail(proposal, "POLICY_AMENDMENT", amendmentFailure, now);
 
     const context: PolicyContext = {
       domain: this.id,
@@ -208,11 +205,22 @@ export class Domain {
       proposal,
       proposalHash,
       evidence,
-      decisions,
       verifier: this.#verifier,
       now,
+      policy: resolution.document,
     };
-    const policyResult = policy.evaluate(context);
+
+    if (proposal.policy.id !== AUTHORITY_POLICY_ID) {
+      const selection = this.#interpreter.evaluateSelection(context);
+      if (!selection.ok) return this.#fail(proposal, "POLICY_SELECTION", selection.reason, now);
+    }
+
+    const preconditionFailure = checkPreconditions(this.#snapshot, proposal.preconditions, this.#preconditions);
+    if (preconditionFailure) {
+      return this.#fail(proposal, "PRECONDITION", preconditionFailure.detail, now);
+    }
+
+    const policyResult = this.#interpreter.evaluate(resolution.document, context);
     if (policyResult.effect !== "ALLOW") {
       return this.#fail(proposal, "POLICY", policyResult.reason, now, policyResult);
     }
@@ -235,13 +243,25 @@ export class Domain {
       proposal,
       proposalHash,
       evidence,
-      decisions,
       policyResult,
       stateHashBefore,
       stateHashAfter,
       committedAt: now,
     };
-    const record: TransitionRecord = { seq: base.seq, domain: base.domain, transitionId: base.transitionId, prev: base.prev, proposal: base.proposal, proposalHash: base.proposalHash, evidence: base.evidence, decisions: base.decisions, policyResult: base.policyResult, stateHashBefore: base.stateHashBefore, stateHashAfter: base.stateHashAfter, committedAt: base.committedAt, hash: recordHash(base) };
+    const record: TransitionRecord = {
+      seq: base.seq,
+      domain: base.domain,
+      transitionId: base.transitionId,
+      prev: base.prev,
+      proposal: base.proposal,
+      proposalHash: base.proposalHash,
+      evidence: base.evidence,
+      policyResult: base.policyResult,
+      stateHashBefore: base.stateHashBefore,
+      stateHashAfter: base.stateHashAfter,
+      committedAt: base.committedAt,
+      hash: recordHash(base),
+    };
 
     this.#ledger.push(record);
     this.#snapshot = applied.state;
@@ -258,6 +278,26 @@ export class Domain {
     return { committed: true, policyResult, record };
   }
 
+  /**
+   * I10 guard. A policy document may only be amended by ITSELF (with a version
+   * pin) or by policy/authority, and it can never be created by a bare
+   * transition - genesis only.
+   */
+  #checkPolicyAmendment(proposal: TransitionProposal): string | null {
+    for (const effect of proposal.effects) {
+      if (!isPolicyKey(effect.key)) continue;
+      const target = policyIdOf(effect.key);
+      if (proposal.policy.id !== target && proposal.policy.id !== AUTHORITY_POLICY_ID) {
+        return "policy/" + target + " may only be amended by policy/" + target + " or policy/" + AUTHORITY_POLICY_ID;
+      }
+      const exists = this.#snapshot.documents.has(effect.key);
+      if (!exists && proposal.policy.id === target) {
+        return "policy/" + target + " does not exist; a policy can only be created at domain genesis or by policy/" + AUTHORITY_POLICY_ID;
+      }
+    }
+    return null;
+  }
+
   #fail(
     proposal: TransitionProposal,
     kind: FailureKind,
@@ -265,8 +305,6 @@ export class Domain {
     at: number,
     policyResult?: PolicyResult,
   ): ProposeResult {
-    const result: PolicyResult =
-      policyResult ?? { policyId: proposal?.policy?.id ?? "unknown", effect: "REJECT", reason: detail };
     this.#attempts.push({
       proposalId: typeof proposal?.id === "string" ? proposal.id : "<malformed>",
       actor: typeof proposal?.actor === "string" ? proposal.actor : "<unknown>",
@@ -276,12 +314,11 @@ export class Domain {
       reason: detail,
       at,
     });
-    return { committed: false, policyResult: result, failure: { kind, detail } };
+    return { committed: false, policyResult: policyResult ?? null, failure: { kind, detail } };
   }
 
-  /** Recomputes state from the initial snapshot and the ledger alone (I1, I2). */
   replay(): ReplayResult {
-    let snapshot = snapshotFrom(this.id, this.#initial);
+    let snapshot = snapshotFrom(this.id, this.#genesis);
     for (const record of this.#ledger) {
       const before = stateHash(snapshot);
       if (before !== record.stateHashBefore) {
@@ -299,13 +336,15 @@ export class Domain {
     return { ok: true, state: snapshot };
   }
 
-  /** Structural verification of the whole domain. */
   verify(): ChainCheck {
     const chain = verifyChain(this.#ledger);
     if (!chain.ok) return chain;
     for (const record of this.#ledger) {
       if (record.policyResult.effect !== "ALLOW") {
         return { ok: false, reason: "seq " + record.seq + " committed without a policy ALLOW" };
+      }
+      if (record.domain !== this.id) {
+        return { ok: false, reason: "seq " + record.seq + " belongs to domain " + record.domain };
       }
     }
     const replayed = this.replay();

@@ -7,7 +7,7 @@ transition is confined to one domain (kernel/domain.ts), so a crash between two
 related transitions leaves a joint state that neither domain can detect or
 repair on its own.
 
-Concrete case (experiments/results/exp-001-cross-agent-atomicity.md): the payee
+Concrete case (experiments/results/v0.2-review.md (review case 001)): the payee
 domain consumed capacity and recorded an outcome; the payer domain still held the
 funds reserved. Both ledgers verify. The joint state is inconsistent.
 
@@ -77,8 +77,8 @@ No change; nothing to be compatible or incompatible with.
 
 ## Test Cases
 
-- exp-001 scenario 3: crash between commits, then settle
-- exp-001 scenario 4: non-delivery, then compensate
+- review case 001: crash between the two commit phases, then settle
+- RFC/ATP-0003 section 6: non-delivery, then compensate
 - a future negative test: a requirement that fails under compensation and would
   pass under atomic commit
 

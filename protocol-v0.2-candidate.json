@@ -1,0 +1,19 @@
+{
+  "name": "Agent Transaction Protocol",
+  "abbreviation": "ATP",
+  "baseline": "ATP-0001",
+  "candidate": "ATP-0002",
+  "kernel_version": "0.2-candidate",
+  "status": "experimental-review",
+  "kernel_primitives": ["State", "Transition", "Policy", "Evidence"],
+  "decision_status": "protocol_semantic_evidence_schema",
+  "method": "adversarial evolution",
+  "core_invariant": "Any protocol-relevant state change must occur through a valid state transition.",
+  "authority_scope": "state-domain-and-policy-scoped",
+  "cross_domain_rule": "external claims acquire effect only through destination-policy recognition",
+  "state_domain": "defined kernel term: one state space, one ledger, one policy store, one rule vocabulary",
+  "policy_representation": "documents held in state at policy/<id>; the state version is the policy version; the rule vocabulary is interpreter code",
+  "policy_amendment_rule": "by itself under a version pin, or by policy/authority; never by a bare transition",
+  "decision_attachment": "evidence with about === proposalHash, gathered automatically so a proposal cannot hide a judgment aimed at it",
+  "decision_schema_required_fields": ["evaluator", "conclusion", "evidence_basis", "policy_context", "timestamp", "rationale"]
+}

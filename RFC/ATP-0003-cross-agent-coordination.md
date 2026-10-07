@@ -1,4 +1,4 @@
-# ATP-0002: Cross-Agent Coordination (Extension Protocol)
+# ATP-0003: Cross-Agent Coordination (Extension Protocol)
 
 **Status:** Draft / Experimental  
 **Version:** 0.1  
@@ -114,7 +114,7 @@ reservations are unaffected.
 
 ## 12. Test Cases
 
-Implemented as experiments/exp-001-cross-agent-atomicity.ts:
+Exercised by experiments/v0.2-review/cases-a.ts, review case 001:
 
 - one-phase payment with a crash before delivery (inconsistent)
 - prepare failure with expiry (safe)

@@ -1,58 +1,48 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runCrossAgentAtomicity } from "../experiments/exp-001-cross-agent-atomicity.ts";
-import { runMaliciousJudge } from "../experiments/exp-003-malicious-judge.ts";
-import { runOverCommitment } from "../experiments/exp-004-overcommitment.ts";
-import { runOutcomeReversal } from "../experiments/exp-005-outcome-reversal.ts";
+import { case001, case002, case003, case004, case005, case006, case007, case008 } from "../experiments/v0.2-review/cases-a.ts";
+import { case009, case010, case011, case012, case013, case014, case015, case016 } from "../experiments/v0.2-review/cases-b.ts";
 
-const reports = [
-  runCrossAgentAtomicity(),
-  runMaliciousJudge(),
-  runOverCommitment(),
-  runOutcomeReversal(),
+const cases = [
+  case001(), case002(), case003(), case004(), case005(), case006(), case007(), case008(),
+  case009(), case010(), case011(), case012(), case013(), case014(), case015(), case016(),
 ];
 
-test("every experiment assertion holds", () => {
-  for (const report of reports) {
-    const failed = report.assertions.filter((a) => !a.held);
-    assert.equal(failed.length, 0, report.id + " failed: " + failed.map((a) => a.claim).join("; "));
-    assert.ok(report.assertions.length >= 4, report.id + " should assert its findings");
+test("every review case is supported and none is refuted", () => {
+  for (const c of cases) {
+    const failed = c.assertions.filter((a) => !a.held);
+    assert.deepEqual(
+      failed.map((a) => a.claim),
+      [],
+      c.id + " " + c.name + " failed: " + failed.map((a) => a.claim + " (" + a.detail + ")").join("; "),
+    );
+    assert.equal(c.verdict, "SUPPORTED", c.id + " " + c.name);
+  }
+  assert.equal(cases.length, 16, "the v0.2 review record lists sixteen cases");
+});
+
+test("the suite carries a meaningful number of assertions", () => {
+  const total = cases.reduce((sum, c) => sum + c.assertions.length, 0);
+  assert.ok(total >= 45, "expected at least 45 assertions, found " + total);
+});
+
+test("no review case leaves an invariant failure behind", () => {
+  for (const c of cases) {
+    assert.deepEqual(c.invariants.filter((line) => line.includes("FAIL")), [], c.id + " reported an invariant failure");
   }
 });
 
-test("no experiment leaves an invariant violation behind", () => {
-  for (const report of reports) {
-    const violations = report.invariants.filter((line) => line.includes("FAIL"));
-    assert.deepEqual(violations, [], report.id + " reported invariant failures");
-  }
+test("the candidate's load-bearing claims are the ones being tested", () => {
+  const byId = new Map(cases.map((c) => [c.id, c]));
+  assert.ok(byId.get("012")?.assertions.some((a) => a.claim.includes("amended policy immediately has teeth") && a.held));
+  assert.ok(byId.get("015")?.assertions.some((a) => a.claim.includes("no Decision primitive") && a.held));
+  assert.ok(byId.get("016")?.assertions.some((a) => a.claim.includes("four candidate primitives") && a.held));
+  assert.ok(byId.get("001")?.assertions.some((a) => a.claim.includes("no transition spans two Domains") && a.held));
+  assert.ok(byId.get("013")?.assertions.some((a) => a.claim.includes("captured") && a.held));
 });
 
-test("experiment 001 concludes an extension issue with an open kernel question", () => {
-  const report = runCrossAgentAtomicity();
-  assert.ok(report.classification.includes("EXTENSION"));
-  assert.ok(report.findings.some((f) => f.classification.includes("KERNEL")));
-  assert.ok(report.assertions.some((a) => a.claim.includes("no cross-domain transaction") && a.held));
-  assert.ok(report.assertions.some((a) => a.claim.includes("eventual consistency") && a.held));
-});
-
-test("experiment 003 demonstrates collusion but enforces authority", () => {
-  const report = runMaliciousJudge();
-  assert.ok(report.assertions.some((a) => a.claim.includes("colluding") && a.held));
-  assert.ok(report.assertions.some((a) => a.claim.includes("single malicious judge") && a.held));
-  assert.ok(report.assertions.some((a) => a.claim.includes("count once") && a.held));
-  assert.ok(report.findings.some((f) => f.title.includes("not distinct principals")));
-});
-
-test("experiment 004 keeps over-commitment in the policy layer", () => {
-  const report = runOverCommitment();
-  assert.ok(report.classification.includes("EXTENSION"));
-  assert.ok(report.assertions.some((a) => a.claim.includes("guarded policy prohibits over-commitment") && a.held));
-  assert.ok(report.assertions.some((a) => a.claim.includes("probabilistic") && a.held));
-});
-
-test("experiment 005 reverses an outcome while preserving history", () => {
-  const report = runOutcomeReversal();
-  assert.ok(report.classification.includes("NONE"));
-  assert.ok(report.assertions.some((a) => a.claim.includes("original PROVEN value") && a.held));
-  assert.ok(report.assertions.some((a) => a.claim.includes("new transitions") && a.held));
+test("cross-domain atomicity is reported as a coordination property, not a kernel gap", () => {
+  const c = cases.find((x) => x.id === "001")!;
+  assert.ok(c.classification.includes("SUPPORTED"));
+  assert.ok(c.invariants.every((line) => !line.includes("FAIL")));
 });

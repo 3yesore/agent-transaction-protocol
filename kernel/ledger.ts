@@ -12,7 +12,7 @@ export interface ChainCheck {
   readonly reason?: string;
 }
 
-/** Structural verification of the append-only hash chain (invariants I2, I5). */
+/** Structural verification of the append-only hash chain (v0.2 I4). */
 export function verifyChain(records: readonly TransitionRecord[]): ChainCheck {
   let prev: Hash | null = null;
   for (let i = 0; i < records.length; i++) {
@@ -31,7 +31,6 @@ export function verifyChain(records: readonly TransitionRecord[]): ChainCheck {
       proposal: record.proposal,
       proposalHash: record.proposalHash,
       evidence: record.evidence,
-      decisions: record.decisions,
       policyResult: record.policyResult,
       stateHashBefore: record.stateHashBefore,
       stateHashAfter: record.stateHashAfter,
@@ -42,6 +41,9 @@ export function verifyChain(records: readonly TransitionRecord[]): ChainCheck {
     }
     if (hashJson(record.proposal) !== record.proposalHash) {
       return { ok: false, reason: "proposal hash mismatch at seq " + record.seq };
+    }
+    if (record.proposal.domain !== record.domain) {
+      return { ok: false, reason: "seq " + record.seq + " is not confined to its own domain (I3)" };
     }
     prev = record.hash;
   }

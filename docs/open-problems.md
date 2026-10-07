@@ -1,103 +1,84 @@
 # Open Problems
 
-This file tracks the open problems listed in README.md, with the current
-evidence for each. A problem is marked **resolved** only when an experiment
-demonstrates it, not when a design argues for it.
+Status of the problems listed in the README, with the current evidence for each. A problem is marked resolved only when an experiment demonstrates it, not when a design argues for it.
 
 | # | Problem | Status | Evidence |
 |---|---------|--------|----------|
-| 1 | Cross-Agent Atomicity | Open | experiments/results/exp-001-cross-agent-atomicity.md |
-| 2 | Cross-State Transactions | Open (kernel question) | experiments/results/exp-001-cross-agent-atomicity.md |
-| 3 | Evidence Authenticity | Open | experiments/results/exp-003-malicious-judge.md |
-| 4 | Decision Authority | Partially addressed | exp-003, exp-005 |
-| 5 | Sybil Resistance | Open | experiments/results/exp-003-malicious-judge.md |
-| 6 | Capability Fungibility | Open | exp-004 (accounting only) |
-| 7 | Temporal Semantics | Partially addressed | exp-001 (expiry), exp-004 (deadlines) |
-| 8 | Dispute and Reversal Semantics | Addressed within one domain | experiments/results/exp-005-outcome-reversal.md |
-| 9 | Finality Across Dependent Agents | Open | - |
-| 10 | Agent Failure and Disappearance | Partially addressed | exp-001 |
-| 11 | Interoperability Between ATP Domains | Open | content-addressed evidence is a starting point |
+| 1 | Cross-Agent Atomicity | Addressed as semantics; coordination open | review 001, RFC/ATP-0003 |
+| 2 | Cross-State Transactions | Open kernel question, deferred | proposals/ATP-P0001 |
+| 3 | Evidence Authenticity | Open | review 013 |
+| 4 | Decision Authority | Partially addressed | review 015, docs/decision-schema.md |
+| 5 | Sybil Resistance | Open | review 013 |
+| 6 | Capability Fungibility | Open | extension accounting only |
+| 7 | Temporal Semantics | Partially addressed; cross-Domain ordering open | review 005 |
+| 8 | Dispute and Reversal | Addressed within a Domain | review 009 |
+| 9 | Finality | Partially addressed | review 005 |
+| 10 | Agent Failure and Disappearance | Partially addressed; liveness open | review 001 |
+| 11 | Interoperability Between Domains | Portability addressed; wire format undefined | review 014 |
+| 12 | **Identity** | Open, and now load-bearing | blocks I3 / I5 strength |
+| 13 | **Privacy and Erasure** | Open, in direct tension with I4 | not addressed anywhere |
+| 14 | **Interpreter and Verifier Provenance** | Partially addressed | docs/policy-as-state.md |
 
-## 1. Cross-Agent Atomicity - Open
+## 1. Cross-Agent Atomicity - addressed as semantics, coordination open
 
-A two-phase reservation with expiry, plus an evidence-driven settlement and
-compensation path, restores a *consistent* joint state after a crash. It does not
-provide *instantaneous* atomicity: a crash between the two commit phases is
-observable. See Experiment 001.
+I8 states that atomicity is Domain-scoped, and review case 001 confirms it: each Domain stays internally atomic while a crash between two commit phases leaves a joint inconsistency. Recovery is eventual consistency through Evidence, Policy, and compensation (RFC/ATP-0003). Instantaneous atomicity is not provided and is not claimed.
 
-Next step: state the required delivery semantics precisely (atomic, or eventual
-with bounded compensation), then show whether an extension coordinator satisfies
-them.
+## 2. Cross-State Transactions - open kernel question, deferred
 
-## 2. Cross-State Transactions - Open (kernel question)
+No transition spans two Domains. proposals/ATP-P0001 records the failure case and the conditions under which a kernel revision would be justified. None has been demonstrated, so no primitive is proposed.
 
-No transition in the reference implementation spans two domains. Instantaneous
-cross-domain atomicity is therefore unavailable by construction. This is recorded
-as a kernel question in proposals/ATP-P0001-cross-state-transactions.md, and no
-primitive is proposed until a requirement is shown that cannot accept eventual
-consistency.
+## 3. Evidence Authenticity - open
 
-## 3. Evidence Authenticity - Open
+Content addressing detects tampering after publication. It cannot detect a false claim in a well-formed record. Review case 013 shows that the same policy text is capturable or not depending on the verifier's trusted-producer set, which means authenticity is a configuration concern, not a kernel property.
 
-Content addressing detects post-publication tampering. It cannot detect a false
-claim made by a well-formed record. Experiment 003 shows a false but structurally
-valid evidence record verifying as VALID.
+## 4. Decision Authority - partially addressed
 
-Next step: define a per-evidence-kind trust model as an extension schema.
+The Decision schema now requires `rationale`, `evidence_basis`, and `policy_context`, so an evaluator that can only return a score cannot produce a conforming Decision. That bounds the problem; it does not solve who is eligible to judge.
 
-## 4. Decision Authority - Partially Addressed
+## 5. Sybil Resistance - open
 
-Policy bounds who may decide (allowed judge set), how many must agree
-(threshold), and what evidence must exist. It cannot establish that a judge is
-honest or independent. Experiment 005 shows outcome reversal working when the
-authority is known.
+Review case 013 shows a self-issued attestation capturing a permissive Domain. Eligibility is enforced only by allowlists and thresholds, neither of which establishes that two identifiers are two principals.
 
-## 5. Sybil Resistance - Open
+## 6. Capability Fungibility - open
 
-Two ids controlled by one operator satisfied a 2-of-N threshold (Experiment 003).
-Distinct judge ids are deduplicated, but identity is not proof of independence.
+Capability accounting with conservation exists, and `capability-conserved-effect` prevents negative or non-conserved values. Whether one unit of capability A is exchangeable for one unit of capability B is undefined.
 
-## 6. Capability Fungibility - Open
+## 7. Temporal Semantics - partially addressed
 
-Experiment 004 implements capability accounting with conservation, over-commit
-guards, and certainty-weighted claims. Whether one unit of capability A is
-exchangeable for one unit of capability B is undefined, and no experiment has
-forced the question.
+Policy documents carry `validFrom` and `validUntil`, the `time-window` rule tests an injected clock, and review case 005 shows an expired policy rejecting transitions and refusing to reopen itself. There is still no ordering guarantee between two independent Domains.
 
-## 7. Temporal Semantics - Partially Addressed
+## 8. Dispute and Reversal - addressed within a Domain
 
-Clocks are injected; reservations carry expiries and commitments carry deadlines.
-There is no ordering guarantee across domains and no protocol-level notion of
-"before" between two independent ledgers.
+Review case 009: `CONFLICTED` is ordinary state, does not block further transitions, and does not mutate the disputed record. Cross-Domain disputes reduce to problem 2.
 
-## 8. Dispute and Reversal Semantics - Addressed within one domain
+## 9. Finality - partially addressed
 
-Experiment 005: an outcome moves PROVEN to DISPUTED to SUPERSEDED, the successor
-references the decision that justified it, and the original value stays in the
-ledger. Cross-domain disputes remain open, because they reduce to problem 2.
+Finality is a Policy window (review case 005). There is no rule that closes a state against competing transitions beyond expiring the policy that governs it.
 
-## 9. Finality Across Dependent Agents - Open
+## 10. Agent Failure and Disappearance - partially addressed, liveness open
 
-Finality is not modelled. A domain can always accept another transition. There is
-no rule that closes a state against competing transitions.
+Case 001 shows a disappearing counterparty does not destroy value because holds expire and compensation is expressible. But release requires some actor to propose it: the kernel has no timers. Any extension protocol must name that actor.
 
-## 10. Agent Failure and Disappearance - Partially Addressed
+## 11. Interoperability Between Domains - portability addressed, wire format undefined
 
-Reservations expire and can be released, and compensation is expressible, so a
-disappearing counterparty does not destroy value. But release requires some actor
-to propose it: the kernel has no timers (Experiment 001, third finding). This is a
-liveness obligation that any extension protocol must state.
+Review case 014 confirms that history is portable by content address and that authority is not, requiring destination recognition. Serialization of transitions and policies is still unspecified, so two independent implementations cannot yet be checked for agreement.
 
-## 11. Interoperability Between ATP Domains - Open
+## 12. Identity - open, and now load-bearing
 
-Evidence is content-addressed and can be republished identically in another
-domain, which makes cross-domain evidence references possible today. Shared
-policy registries, shared verifiers, and cross-domain transitions are undefined.
+I3 (Domain-scoped authority) and I5 (local recognition) quantify over a claimant, but the kernel does not define what a claimant is. Without an identity model these invariants are only as strong as the deployment's identifier binding, which the candidate does not constrain. This is now the top dependency rather than a deferrable detail.
+
+## 13. Privacy and Erasure - open, in direct tension with I4
+
+I4 forbids silently rewriting history, and there is no delete effect. A data-protection regime may require erasure. The candidate does not address this at all, and the tension is structural rather than incidental. The minimum honest fix is an explicit scope statement: ATP is not intended for state subject to erasure obligations, or an extension must define commitment-plus-selective-disclosure.
+
+## 14. Interpreter and Verifier Provenance - partially addressed
+
+Policy **documents** are state and their versions are recorded, so policy provenance is now auditable. The rule **vocabulary**, the interpreter, and the verifier's trust set are code and are not in the ledger. Review case 013 makes that boundary concrete.
 
 ## Resolved by expression, not by a new primitive
 
-- **Resulting-state invariants.** A named precondition sees the prior state; a
-  policy over `context.proposal.effects` sees the result and can reject it.
-  Demonstrated in Experiment 004. No postcondition primitive is needed.
-- **Over-commitment.** Prohibition, pricing, and collateralization are policy and
-  economic choices over claim state, not kernel semantics. Experiment 004.
+- **Resulting-state invariants.** A precondition sees the prior state; a rule over `context.proposal.effects` sees the result. No postcondition primitive is needed.
+- **Over-commitment.** Prohibition, pricing, and collateralization are policy and economic choices over claim state.
+- **Policy evolution.** I10 with the representation in docs/policy-as-state.md; no Governance primitive.
+- **Organizational form.** Centralized and plurality Domains authorize through the same pipeline (review case 011).
+- **Decision.** Removed from the kernel and kept as an Evidence schema, with identical authorization outcomes (review case 015).

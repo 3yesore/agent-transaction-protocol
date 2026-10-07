@@ -24,7 +24,7 @@ export interface StateSnapshot {
 /**
  * A transition either creates a key or updates it with an expected version
  * (compare-and-swap). There is deliberately no delete operation: rewriting
- * history is not expressible (invariant I5).
+ * history is not expressible (v0.2 I4).
  */
 export type Effect =
   | { readonly op: "create"; readonly key: StateKey; readonly value: JsonValue }
@@ -47,9 +47,15 @@ export type Precondition =
     }
   | { readonly kind: "named"; readonly id: string; readonly params?: JsonValue };
 
+/**
+ * A policy reference names a policy DOCUMENT held in protocol state
+ * (key "policy/<id>"). The proposal does not carry policy parameters: those
+ * live in the policy document, which only the domain can amend. See I10.
+ */
 export interface PolicyRef {
   readonly id: string;
-  readonly params?: JsonValue;
+  /** Optional pin to the state version of the policy document. */
+  readonly expectedVersion?: number;
 }
 
 export interface TransitionProposal {
@@ -61,7 +67,7 @@ export interface TransitionProposal {
   readonly policy: PolicyRef;
   readonly preconditions: readonly Precondition[];
   readonly effects: readonly Effect[];
-  /** Content addresses of evidence records already published to this domain. */
+  /** Content addresses of evidence the proposer wishes to rely on. */
   readonly evidence: readonly Hash[];
   /** Content addresses of prior transitions this one causally depends on. */
   readonly parents: readonly Hash[];
@@ -77,35 +83,49 @@ export interface EvidenceSignature {
   readonly value: string;
 }
 
+/**
+ * Evidence is the ONLY epistemic primitive in v0.2.
+ *
+ * A judgment ("Decision") is not a kernel primitive; it is an Evidence schema
+ * with kind "decision". Evidence has no authority by itself (I2).
+ */
 export interface EvidenceRecord {
   readonly id: Hash;
+  /** Schema discriminator, e.g. "decision", "delivery-receipt", "trace". */
   readonly kind: string;
   readonly producer: AgentId;
   readonly domain: string;
   readonly payload: JsonValue;
   readonly refs: readonly Hash[];
+  /** Content address of whatever this evidence is about (often a proposal hash). */
   readonly about: Hash | null;
   readonly issuedAt: number;
   readonly signature: EvidenceSignature | null;
 }
 
-export type Verdict = "AFFIRM" | "DENY" | "ABSTAIN";
+/** One declarative authorization rule. The rule vocabulary is interpreter code. */
+export interface PolicyRule {
+  readonly type: string;
+  readonly params?: JsonValue;
+}
 
-export interface DecisionRecord {
-  readonly id: Hash;
-  /** Content address of whatever is being judged (usually a proposal hash). */
-  readonly subject: Hash;
-  readonly judge: AgentId;
-  readonly verdict: Verdict;
-  readonly confidence: number | null;
-  readonly rationale: string;
-  readonly evidenceRefs: readonly Hash[];
-  readonly issuedAt: number;
-  readonly signature: EvidenceSignature | null;
+/**
+ * Policy is State (I10). The document is stored at "policy/<id>"; its STATE
+ * VERSION is the authoritative policy version, because it advances only
+ * through an authorized Transition.
+ */
+export interface PolicyDocument {
+  readonly id: string;
+  readonly description?: string;
+  readonly validFrom?: number | null;
+  readonly validUntil?: number | null;
+  readonly rules: readonly PolicyRule[];
 }
 
 export interface PolicyResult {
   readonly policyId: string;
+  /** State version of the policy document that produced this result. */
+  readonly policyVersion: number;
   readonly effect: "ALLOW" | "REJECT";
   readonly reason: string;
   readonly details?: JsonValue;
@@ -116,17 +136,14 @@ export interface PolicyContext {
   readonly snapshot: StateSnapshot;
   readonly proposal: TransitionProposal;
   readonly proposalHash: Hash;
-  /** Evidence records referenced by the proposal, in proposal order. */
+  /**
+   * Referenced evidence PLUS every evidence record addressed to this proposal
+   * (about === proposalHash). A proposal cannot hide evidence aimed at it.
+   */
   readonly evidence: readonly EvidenceRecord[];
-  /** Decisions whose subject equals the proposal hash. */
-  readonly decisions: readonly DecisionRecord[];
   readonly verifier: EvidenceVerifier;
   readonly now: number;
-}
-
-export interface Policy {
-  readonly id: string;
-  evaluate(context: PolicyContext): PolicyResult;
+  readonly policy: PolicyDocument;
 }
 
 export interface EvidenceVerifier {
@@ -137,13 +154,11 @@ export interface EvidenceVerifier {
 export interface TransitionRecord {
   readonly seq: number;
   readonly domain: string;
-  /** The transition's own identity, computable before state is recomputed. */
   readonly transitionId: Hash;
   readonly prev: Hash | null;
   readonly proposal: TransitionProposal;
   readonly proposalHash: Hash;
   readonly evidence: readonly EvidenceRecord[];
-  readonly decisions: readonly DecisionRecord[];
   readonly policyResult: PolicyResult;
   readonly stateHashBefore: Hash;
   readonly stateHashAfter: Hash;
@@ -156,6 +171,8 @@ export type FailureKind =
   | "SHAPE"
   | "DUPLICATE"
   | "EVIDENCE"
+  | "POLICY_AMENDMENT"
+  | "POLICY_SELECTION"
   | "PRECONDITION"
   | "POLICY_UNKNOWN"
   | "POLICY"
