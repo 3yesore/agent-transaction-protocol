@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { renderReviewMarkdown, type ReviewCase } from "../harness.ts";
 import { case001, case002, case003, case004, case005, case006, case007, case008 } from "./cases-a.ts";
 import { case009, case010, case011, case012, case013, case014, case015, case016 } from "./cases-b.ts";
+import { case017, case018, case019, case020 } from "./cases-identity.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "..", "results");
@@ -12,6 +13,7 @@ mkdirSync(outDir, { recursive: true });
 const cases: ReviewCase[] = [
   case001(), case002(), case003(), case004(), case005(), case006(), case007(), case008(),
   case009(), case010(), case011(), case012(), case013(), case014(), case015(), case016(),
+  case017(), case018(), case019(), case020(),
 ];
 
 const markdown = renderReviewMarkdown(cases);

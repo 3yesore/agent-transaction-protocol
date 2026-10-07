@@ -49,7 +49,7 @@ It enforces the ten v0.2 invariants, resolves Policy documents out of state, and
 
 ## Executable Adversarial Review
 
-The sixteen review cases behind the v0.2 reduction were prose assertions. They are now executable: each states a falsifiable prediction, runs it, and is REFUTED if an assertion fails.
+The sixteen review cases behind the v0.2 reduction were prose assertions, and four identity and cost experiments have been added. All twenty are executable: each states a falsifiable prediction, runs it, and is REFUTED if an assertion fails.
 
 | # | Case | Result | Tests |
 |---|------|--------|-------|
@@ -59,8 +59,10 @@ The sixteen review cases behind the v0.2 reduction were prose assertions. They a
 | 013 | Evidence Recognition Capture | producer trust is part of the boundary | I2 / I5 |
 | 015 | Decision Reduction | identical authorization without a primitive | I6 |
 | 016 | Kernel Reduction | no case needed a fifth primitive | arity |
+| 018 | Registration Stake | stake prices an attack but amortises away | problem 5 |
+| 020 | Unprovable Fraud | collusion still wins when fraud cannot be proven | problems 3 / 5 |
 
-All sixteen cases pass in `experiments/results/v0.2-review.md`. See `experiments/README-v0.2.md` for the full index.
+All twenty cases pass in `experiments/results/v0.2-review.md`. See `experiments/README-v0.2.md` for the full index and `docs/identity-and-cost.md` for the identity economics.
 
 ## Repository Structure
 
@@ -85,6 +87,7 @@ All sixteen cases pass in `experiments/results/v0.2-review.md`. See `experiments
 │   ├── domain.md                State Domain, a defined kernel term
 │   ├── policy-as-state.md       the I10 representation
 │   ├── decision-schema.md       Decision as an Evidence schema
+│   ├── identity-and-cost.md     identity, stake, and what collusion costs
 │   └── open-problems.md
 ├── kernel/                      State, Transition, Policy, Evidence
 ├── extensions/                  capability, reservation, commitment, outcome, decision

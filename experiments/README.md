@@ -46,6 +46,10 @@ latest generated report.
 | 014 | Exit and Portability | I5 |
 | 015 | Decision Reduction | I6 |
 | 016 | Kernel Reduction | arity |
+| 017 | Sybil Without Cost | problem 5 |
+| 018 | Registration Stake Prices the Attack | problem 5 / 12 |
+| 019 | Slashing Makes Collusion Unprofitable | problem 5 |
+| 020 | Slashing Fails When the Fraud Is Unprovable | problems 3 / 5 |
 
 ## Required Case Format
 

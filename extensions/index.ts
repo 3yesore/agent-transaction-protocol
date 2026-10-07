@@ -3,12 +3,14 @@ import { PreconditionRegistry } from "../kernel/state.ts";
 import type { JsonValue, PolicyDocument, StateDocument } from "../kernel/types.ts";
 import { capabilityInvariant, type CapabilityValue } from "./capability.ts";
 import { registerDecisionRules } from "./decision.ts";
+import { registerIdentityRules } from "./identity.ts";
 
 export * from "./capability.ts";
 export * from "./reservation.ts";
 export * from "./commitment.ts";
 export * from "./outcome.ts";
 export * from "./decision.ts";
+export * from "./identity.ts";
 
 /**
  * Genesis helper: policy documents can only enter a Domain at genesis or
@@ -50,6 +52,7 @@ export function standardInterpreter(): PolicyInterpreter {
   registerKernelRules(interpreter);
   registerCapabilityRules(interpreter);
   registerDecisionRules(interpreter);
+  registerIdentityRules(interpreter);
   return interpreter;
 }
 

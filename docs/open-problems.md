@@ -8,14 +8,14 @@ Status of the problems listed in the README, with the current evidence for each.
 | 2 | Cross-State Transactions | Open kernel question, deferred | proposals/ATP-P0001 |
 | 3 | Evidence Authenticity | Open | review 013 |
 | 4 | Decision Authority | Partially addressed | review 015, docs/decision-schema.md |
-| 5 | Sybil Resistance | Open | review 013 |
+| 5 | Sybil Resistance | Characterised, not solved | review 017-020, docs/identity-and-cost.md |
 | 6 | Capability Fungibility | Open | extension accounting only |
 | 7 | Temporal Semantics | Partially addressed; cross-Domain ordering open | review 005 |
 | 8 | Dispute and Reversal | Addressed within a Domain | review 009 |
 | 9 | Finality | Partially addressed | review 005 |
 | 10 | Agent Failure and Disappearance | Partially addressed; liveness open | review 001 |
 | 11 | Interoperability Between Domains | Portability addressed; wire format undefined | review 014 |
-| 12 | **Identity** | Open, and now load-bearing | blocks I3 / I5 strength |
+| 12 | **Identity** | Open; cost model implemented, distinctness unresolved | review 017-020 |
 | 13 | **Privacy and Erasure** | Open, in direct tension with I4 | not addressed anywhere |
 | 14 | **Interpreter and Verifier Provenance** | Partially addressed | docs/policy-as-state.md |
 
@@ -35,9 +35,16 @@ Content addressing detects tampering after publication. It cannot detect a false
 
 The Decision schema now requires `rationale`, `evidence_basis`, and `policy_context`, so an evaluator that can only return a score cannot produce a conforming Decision. That bounds the problem; it does not solve who is eligible to judge.
 
-## 5. Sybil Resistance - open
+## 5. Sybil Resistance - characterised, not solved
 
-Review case 013 shows a self-issued attestation capturing a permissive Domain. Eligibility is enforced only by allowlists and thresholds, neither of which establishes that two identifiers are two principals.
+Four experiments now measure this rather than asserting it (docs/identity-and-cost.md):
+
+- free identities win outright (017);
+- a stake requirement prices the attack and blocks it above break-even, but registration is one-time so the cost amortises away (018);
+- slashing makes a **provable** fraud lose (019);
+- an unprovable fraud still wins, with stake and all (020).
+
+The binding constraint is provability, not identity cost. See problem 3.
 
 ## 6. Capability Fungibility - open
 
@@ -63,9 +70,9 @@ Case 001 shows a disappearing counterparty does not destroy value because holds 
 
 Review case 014 confirms that history is portable by content address and that authority is not, requiring destination recognition. Serialization of transitions and policies is still unspecified, so two independent implementations cannot yet be checked for agreement.
 
-## 12. Identity - open, and now load-bearing
+## 12. Identity - open; cost model implemented, distinctness unresolved
 
-I3 (Domain-scoped authority) and I5 (local recognition) quantify over a claimant, but the kernel does not define what a claimant is. Without an identity model these invariants are only as strong as the deployment's identifier binding, which the candidate does not constrain. This is now the top dependency rather than a deferrable detail.
+I3 and I5 quantify over a claimant, but the kernel does not define one. The extension model in extensions/identity.ts makes a claimant cost something, which is enough to price attacks and to hang eligibility rules on. It does not establish that two identifiers are two principals, and no amount of stake does. This remains the top dependency for the strength of I3 and I5.
 
 ## 13. Privacy and Erasure - open, in direct tension with I4
 

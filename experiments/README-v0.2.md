@@ -27,6 +27,10 @@ npm run experiments      # writes experiments/results/v0.2-review.md
 | 014 | Exit and Portability | Exit does not erase history; portable history does not transfer authority. | I5 |
 | 015 | Decision Reduction | Decision is semantically useful but is representable as structured Evidence. | I6 |
 | 016 | Kernel Reduction | No reviewed case demonstrated a need for a fifth kernel primitive. | arity |
+| 017 | Sybil Without Cost | Free identities satisfy a threshold at zero cost. | problem 5 |
+| 018 | Registration Stake | Stake prices the attack; one-time registration amortises away. | problem 5 / 12 |
+| 019 | Slashing | A provable fraud becomes unprofitable and the identities burn. | problem 5 |
+| 020 | Unprovable Fraud | Collusion still wins; the defence is provability, not cost. | problems 3 / 5 |
 
 ## Findings the prose version did not record
 
@@ -42,3 +46,6 @@ npm run experiments      # writes experiments/results/v0.2-review.md
 - **Case 016**: the transition record carries no field for a fifth primitive and
   the kernel rule vocabulary contains no domain schema. The arity claim is now
   checked rather than asserted.
+- **Cases 017-020**: collusion is now measured, not asserted. Stake prices an
+  attack but amortises away over repeats, and slashing only works against a
+  provable fraud. See docs/identity-and-cost.md for the numbers.
