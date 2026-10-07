@@ -3,12 +3,16 @@ import assert from "node:assert/strict";
 import { case001, case002, case003, case004, case005, case006, case007, case008 } from "../experiments/v0.2-review/cases-a.ts";
 import { case009, case010, case011, case012, case013, case014, case015, case016 } from "../experiments/v0.2-review/cases-b.ts";
 import { case017, case018, case019, case020 } from "../experiments/v0.2-review/cases-identity.ts";
+import { case021, case022, case023 } from "../experiments/v0.2-review/cases-provider.ts";
 
-const cases = [
-  case001(), case002(), case003(), case004(), case005(), case006(), case007(), case008(),
-  case009(), case010(), case011(), case012(), case013(), case014(), case015(), case016(),
-  case017(), case018(), case019(), case020(),
-];
+const cases = await Promise.all([
+  Promise.resolve(case001()), Promise.resolve(case002()), Promise.resolve(case003()), Promise.resolve(case004()),
+  Promise.resolve(case005()), Promise.resolve(case006()), Promise.resolve(case007()), Promise.resolve(case008()),
+  Promise.resolve(case009()), Promise.resolve(case010()), Promise.resolve(case011()), Promise.resolve(case012()),
+  Promise.resolve(case013()), Promise.resolve(case014()), Promise.resolve(case015()), Promise.resolve(case016()),
+  Promise.resolve(case017()), Promise.resolve(case018()), Promise.resolve(case019()), Promise.resolve(case020()),
+  case021(), case022(), case023(),
+]);
 
 test("every review case is supported and none is refuted", () => {
   for (const c of cases) {
@@ -20,12 +24,12 @@ test("every review case is supported and none is refuted", () => {
     );
     assert.equal(c.verdict, "SUPPORTED", c.id + " " + c.name);
   }
-  assert.equal(cases.length, 20, "the review record lists twenty cases");
+  assert.equal(cases.length, 23, "the review record lists twenty-three cases");
 });
 
 test("the suite carries a meaningful number of assertions", () => {
   const total = cases.reduce((sum, c) => sum + c.assertions.length, 0);
-  assert.ok(total >= 60, "expected at least 60 assertions, found " + total);
+  assert.ok(total >= 75, "expected at least 75 assertions, found " + total);
 });
 
 test("no review case leaves an invariant failure behind", () => {
@@ -52,8 +56,10 @@ test("the identity and cost experiments answer whether collusion wins", () => {
   assert.ok(byId.get("020")?.assertions.some((a) => a.claim.includes("still wins") && a.held), "unprovable fraud must still win");
 });
 
-test("cross-domain atomicity is reported as a coordination property, not a kernel gap", () => {
-  const c = cases.find((x) => x.id === "001")!;
-  assert.ok(c.classification.includes("SUPPORTED"));
-  assert.ok(c.invariants.every((line) => !line.includes("FAIL")));
+test("the decision-provider cases enforce the schema boundary", () => {
+  const byId = new Map(cases.map((c) => [c.id, c]));
+  assert.ok(byId.get("021")?.assertions.some((a) => a.claim.includes("bare score is refused") && a.held), "a bare score must be refused");
+  assert.ok(byId.get("021")?.assertions.some((a) => a.claim.includes("off-menu") && a.held), "an invented conclusion must be refused");
+  assert.ok(byId.get("022")?.assertions.some((a) => a.claim.includes("rationale is recorded") && a.held), "the model rationale must reach state");
+  assert.ok(byId.get("023")?.assertions.some((a) => a.claim.includes("confidence does not create authority") && a.held), "confidence must not authorize");
 });

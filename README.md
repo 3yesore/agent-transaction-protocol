@@ -49,7 +49,7 @@ It enforces the ten v0.2 invariants, resolves Policy documents out of state, and
 
 ## Executable Adversarial Review
 
-The sixteen review cases behind the v0.2 reduction were prose assertions, and four identity and cost experiments have been added. All twenty are executable: each states a falsifiable prediction, runs it, and is REFUTED if an assertion fails.
+The sixteen review cases behind the v0.2 reduction were prose assertions, four identity and cost experiments, and three decision-provider cases have been added. All twenty-three are executable: each states a falsifiable prediction, runs it, and is REFUTED if an assertion fails.
 
 | # | Case | Result | Tests |
 |---|------|--------|-------|
@@ -61,8 +61,10 @@ The sixteen review cases behind the v0.2 reduction were prose assertions, and fo
 | 016 | Kernel Reduction | no case needed a fifth primitive | arity |
 | 018 | Registration Stake | stake prices an attack but amortises away | problem 5 |
 | 020 | Unprovable Fraud | collusion still wins when fraud cannot be proven | problems 3 / 5 |
+| 021 | Decision Provider Conformance | a bare score or an invented option is refused | I6 |
+| 023 | Model Failure Is Not Authority | confidence is recorded, never authoritative | I2 / I6 |
 
-All twenty cases pass in `experiments/results/v0.2-review.md`. See `experiments/README-v0.2.md` for the full index and `docs/identity-and-cost.md` for the identity economics.
+All twenty-three cases pass in `experiments/results/v0.2-review.md`. See `experiments/README-v0.2.md` for the full index and `docs/identity-and-cost.md` for the identity economics.
 
 ## Repository Structure
 
@@ -88,6 +90,7 @@ All twenty cases pass in `experiments/results/v0.2-review.md`. See `experiments/
 │   ├── policy-as-state.md       the I10 representation
 │   ├── decision-schema.md       Decision as an Evidence schema
 │   ├── identity-and-cost.md     identity, stake, and what collusion costs
+│   ├── decision-provider.md     the seam between protocol state and an evaluator
 │   └── open-problems.md
 ├── kernel/                      State, Transition, Policy, Evidence
 ├── extensions/                  capability, reservation, commitment, outcome, decision

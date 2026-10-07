@@ -50,6 +50,9 @@ latest generated report.
 | 018 | Registration Stake Prices the Attack | problem 5 / 12 |
 | 019 | Slashing Makes Collusion Unprofitable | problem 5 |
 | 020 | Slashing Fails When the Fraud Is Unprovable | problems 3 / 5 |
+| 021 | Decision Provider Conformance | I6 |
+| 022 | A Model Judgment Inside a Live Domain | I6 |
+| 023 | Model Failure Is Not Authority | I2 / I6 |
 
 ## Required Case Format
 

@@ -55,6 +55,15 @@ An evaluator that cannot state a rationale is an oracle, not a judge, and the
 protocol should record it as a lower-trust evidence kind rather than as a
 decision.
 
+## Producing a Decision
+
+The code path that enforces this is @@extensions/decision-provider.ts@@: a
+provider returns @@{ conclusion, confidence, rationale }@@, the adapter validates
+it against the supplied options and a minimum rationale length, retries once with
+the failure appended, and then either publishes a conforming Decision or throws.
+A thrown provider leaves the protocol with no judgment, so the transition is
+refused. See @@docs/decision-provider.md@@.
+
 ## Deterministic decision-makers
 
 Nothing requires a model. The reference experiments use hand-written

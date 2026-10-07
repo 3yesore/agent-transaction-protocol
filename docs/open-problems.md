@@ -7,7 +7,7 @@ Status of the problems listed in the README, with the current evidence for each.
 | 1 | Cross-Agent Atomicity | Addressed as semantics; coordination open | review 001, RFC/ATP-0003 |
 | 2 | Cross-State Transactions | Open kernel question, deferred | proposals/ATP-P0001 |
 | 3 | Evidence Authenticity | Open | review 013 |
-| 4 | Decision Authority | Partially addressed | review 015, docs/decision-schema.md |
+| 4 | Decision Authority | Partially addressed | review 015, 021-023, docs/decision-provider.md |
 | 5 | Sybil Resistance | Characterised, not solved | review 017-020, docs/identity-and-cost.md |
 | 6 | Capability Fungibility | Open | extension accounting only |
 | 7 | Temporal Semantics | Partially addressed; cross-Domain ordering open | review 005 |
@@ -33,7 +33,7 @@ Content addressing detects tampering after publication. It cannot detect a false
 
 ## 4. Decision Authority - partially addressed
 
-The Decision schema now requires `rationale`, `evidence_basis`, and `policy_context`, so an evaluator that can only return a score cannot produce a conforming Decision. That bounds the problem; it does not solve who is eligible to judge.
+The Decision schema now requires `rationale`, `evidence_basis`, and `policy_context`, so an evaluator that can only return a score cannot produce a conforming Decision. Review cases 021-023 enforce that boundary in code: a bare score, an off-menu conclusion, or an out-of-range confidence is refused, retried once, and then leaves the protocol with no judgment at all. Confidence is recorded but never authoritative (docs/decision-provider.md). That bounds the problem; it does not solve who is eligible to judge.
 
 ## 5. Sybil Resistance - characterised, not solved
 

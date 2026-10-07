@@ -31,6 +31,9 @@ npm run experiments      # writes experiments/results/v0.2-review.md
 | 018 | Registration Stake | Stake prices the attack; one-time registration amortises away. | problem 5 / 12 |
 | 019 | Slashing | A provable fraud becomes unprofitable and the identities burn. | problem 5 |
 | 020 | Unprovable Fraud | Collusion still wins; the defence is provability, not cost. | problems 3 / 5 |
+| 021 | Decision Provider Conformance | A conforming model response becomes a Decision; a bare score and an invented conclusion are refused. | I6 |
+| 022 | A Model Judgment in a Live Domain | A model judgment authorizes or blocks a transition; its rationale reaches state verbatim. | I6 |
+| 023 | Model Failure Is Not Authority | An unconforming model leaves no Decision, so the transition is refused however confident it sounds. | I2 / I6 |
 
 ## Findings the prose version did not record
 
