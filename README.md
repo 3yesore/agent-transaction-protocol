@@ -129,6 +129,46 @@ Consequence: **a chain's safety claim cannot come from ATP-0002 and cannot come 
 validator count or stake. It comes from implementation diversity, which is an
 ecosystem property.** See `docs/validator-quorum.md`.
 
+## Semantic Amendment Under a Quorum
+
+ATP-0002's one rule says an amendment must be authorised by the semantics it
+replaces. On a chain that means a quorum selects it - and a semantic amendment is a
+single, self-replacing, irreversible event, unlike the stream of object-level
+transitions. Three asymmetries follow.
+
+**Frequency.** A per-round shared cause is averaged away over a stream but not over
+a handful of amendments. At rho = 0.2 there is a 50% chance of capturing an
+amendment within four attempts and 99% within twenty-one. The same quorum with no
+shared cause is immune by five orders of magnitude.
+
+**Persistence.** An object-level bad state is corrected by a later transition under
+unchanged rules, so it settles at p/(p+c) = 18.2%. A captured amendment *replaces*
+the rules, so the correcting mechanism is gone. Bad rounds climb to 99% at N=400:
+the same per-event rate costs five times the lifetime damage, growing with the
+protocol's age.
+
+**Divergence.** Diversity lowers the object-level floor and raises the chance that
+implementations read the rules differently. At the meta level that is not a rejected
+transition, it is two rule sets.
+
+| implementations | object floor | P(meta fork) | loss @ severity 1 | loss @ severity 10 |
+|-----------------|--------------|--------------|-------------------|--------------------|
+| 1 | 20.0% | 2.0% | 0.220 | **0.400** |
+| 5 | 5.8% | 9.6% | **0.154** | 1.018 |
+| 35 | 0.0% | 50.7% | 0.507 | 5.067 |
+
+The two risks move in opposite directions. The optimum is m=5 when a fork is cheap
+and **m=1 once a fork is expensive** - which it should be, because it splits the
+chain's common ground.
+
+> A self-amending chain can have self-amendment or implementation diversity.
+> It cannot have both.
+
+That reframes the engineering problem: it is not the consensus mechanism. It is
+reducing the shared-cause rate of one implementation, and designing an amendment
+procedure unambiguous enough that independent readers cannot diverge on it. See
+`docs/meta-consensus.md`.
+
 ## Current Normative State
 
 The repository carries the **ATP-0002 freeze**, which reduces the kernel again,
@@ -206,6 +246,7 @@ casually.
 │   ├── identity-and-cost.md     identity, stake, and what collusion costs
 │   ├── judge-evaluation.md      why accuracy is the wrong metric for a judge
 │   ├── validator-quorum.md      what a quorum's safety actually depends on
+│   ├── meta-consensus.md        semantic amendment, and why it is worse
 │   ├── open-problems.md
 │   └── history/                 superseded candidate-era documents
 ├── conformance/                 ATP-0002 conformance suite
@@ -221,6 +262,7 @@ casually.
 │   ├── judge-bench/             judge quality measured against protocol outcome
 │   ├── reduction/               the freeze kernel as code, and the audit
 │   ├── validator-quorum/        correlated validator failure
+│   ├── meta-consensus/          semantic amendment under a quorum
 │   └── results/                 generated reports
 ├── proposals/
 ├── prompts/
