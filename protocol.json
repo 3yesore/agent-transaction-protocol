@@ -1,0 +1,16 @@
+{
+  "name": "Agent Transaction Protocol",
+  "abbreviation": "ATP",
+  "baseline": "ATP-0001",
+  "kernel_version": "0.1",
+  "status": "experimental",
+  "kernel_primitives": [
+    "State",
+    "Transition",
+    "Policy",
+    "Evidence",
+    "Decision"
+  ],
+  "method": "adversarial evolution",
+  "core_invariant": "Any protocol-relevant state change must occur through a valid state transition."
+}

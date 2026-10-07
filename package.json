@@ -1,0 +1,16 @@
+{
+  "name": "agent-transaction-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agent Transaction Protocol (ATP) - minimal kernel for autonomous-agent state transitions, with a zero-dependency reference implementation and adversarial experiments.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "test": "node --test test/kernel.test.ts test/invariants.test.ts test/experiments.test.ts",
+    "experiments": "node experiments/run-all.ts",
+    "verify": "node experiments/run-all.ts && npm test"
+  }
+}
