@@ -99,6 +99,41 @@ It writes `experiments/results/live-model-check.md`. This validates the
 small general-purpose model asked for a typed decision is a plumbing test, not a
 Jev-class decision model.
 
+## Wiring a real decision model
+
+Two obstacles are not in any model card and cost real time:
+
+1. **The GGUF may ship without a chat template.** Ollama then reports the
+   template as `{{ .Prompt }}` and silently runs the model as a completion
+   model, so the system prompt and the task are concatenated without any turn
+   markers. The symptom is an empty or rambling reply and `done_reason: length`.
+2. **Qwen3.5-based decision models emit a thinking block** even when
+   `think: false` is set, and with `num_predict: 1` that single token is
+   consumed by it. The reply comes back as a bare newline.
+
+Both are fixed by sending a raw prompt in the family's no-think format:
+
+~~~text
+<|im_start|>system
+<system prompt><|im_end|>
+<|im_start|>user
+<task json><|im_end|>
+<|im_start|>assistant
+ thinking
+
+<|end▁of▁thinking|>
+
+~~~
+
+That is what `ollamaLetterTransport({ format: "qwen3-no-think" })` does, via
+`/api/generate` with `raw: true`. With it, Decision-4B answers in about 0.8 s
+on the RTX 3060 Laptop and returns a probability per option from
+`top_logprobs`, which the chat endpoint did not provide at all.
+
+The cost is that the prompt format is now model-family specific. That is a real
+integration burden and the reason a decision-model transport cannot simply reuse
+the OpenAI-compatible path.
+
 ## Measured against a real model
 
 Hardware: RTX 3060 Laptop 6GB, Ryzen 9 5900HX, 32GB RAM. Model: `qwen2.5:1.5b`
