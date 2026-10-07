@@ -96,3 +96,22 @@ Each version should be tested against:
 ## Principle
 
 > The protocol should become stronger by surviving attacks, not by accumulating abstractions.
+
+## Kernel Reduction Stage — v0.2
+
+The first reduction stage concluded that the v0.1 five-object kernel was not irreducible.
+
+The current model is:
+
+```text
+D = (S0, R0)
+R(S, X, C, S') -> valid / invalid
+```
+
+The reduction was accepted after adversarial tests covering commitments, capabilities, liabilities, outcomes, settlement, atomicity, time, conflict, finality, irreversibility, shared resources, cross-domain recognition, and circular recognition.
+
+The principal lesson is:
+
+> Reduce objects before reducing semantics.
+
+Many apparent primitives are representations of state or mechanisms for interpreting/selecting state evolution. The remaining research focus is therefore on the semantic constraints required for `R` itself to remain non-trivial and coherent.

@@ -3,8 +3,9 @@
 > A research project exploring a minimal, machine-native transaction protocol for autonomous agents.
 
 **Status:** Experimental / Research
-**Frozen baseline:** ATP-0001 / Kernel v0.1 - `RFC/ATP-0001-kernel-baseline.md`
-**Current candidate:** ATP-0002 / Kernel v0.2 - `SPEC-v0.2-candidate.md`
+**Frozen historical baseline:** ATP-0001 / Kernel v0.1 - `RFC/ATP-0001-kernel-baseline.md`, `SPEC-v0.1-historical.md`
+**Current research version:** ATP-0002 / Kernel v0.2 (freeze) - `SPEC.md`, `RFC/ATP-0002-state-evolution-kernel.md`
+**Intermediate candidate:** `SPEC-v0.2-candidate.md` - the four-primitive model that `kernel/` and `extensions/` implement
 
 ## Abstract
 
@@ -40,8 +41,10 @@ ATP is not currently a blockchain, a cryptocurrency, an LLM framework, an agent 
 A zero-dependency reference implementation of Kernel v0.2 in TypeScript, executed directly by Node 22.6+ with no build step.
 
 ~~~bash
-npm test              # kernel, invariant, and review suites
+npm test              # 40 tests: kernel, invariants, review, judge bench, reduction audit
 npm run experiments   # regenerate experiments/results/v0.2-review.md
+npm run bench         # judge benchmark -> experiments/results/judge-bench.md
+npm run reduction     # kernel reduction audit -> experiments/results/reduction-audit.md
 npm run verify        # experiments then tests
 ~~~
 
@@ -66,13 +69,60 @@ The sixteen review cases behind the v0.2 reduction were prose assertions, four i
 
 All twenty-three cases pass in `experiments/results/v0.2-review.md`. See `experiments/README-v0.2.md` for the full index and `docs/identity-and-cost.md` for the identity economics.
 
+## Current Normative State
+
+The repository carries the **ATP-0002 freeze**, which reduces the kernel again,
+from four primitives to two:
+
+~~~text
+D = (S0, R0)
+R(S, X, C, S') -> valid / invalid
+~~~
+
+Policy and Evidence leave the kernel; `S0` and `R0` remain. See `SPEC.md`,
+`RFC/ATP-0002-state-evolution-kernel.md`, `docs/kernel-reduction-research.md`,
+and `docs/ATP-0002-stage-freeze.md`.
+
+`kernel/` and `extensions/` implement the **intermediate candidate**, not the
+freeze. Under the freeze that code is not superseded - it is one concrete `R`.
+`docs/freeze-reconciliation.md` maps the two and lists five defects in the freeze
+that should be fixed rather than silently patched.
+
+## Kernel Reduction Audit
+
+The obvious objection to a kernel of `D = (S0, R0)` is that it is empty, because
+`R` is a free parameter. That is true by construction and refutes nothing. The
+audit asks instead a question that can fail: is there a constraint that
+constrains **which relation the kernel consults**, or **how many domains exist**,
+rather than what any relation accepts?
+
+Of the eight constraints the freeze states, six reduce to some `R`, one is a
+permission, and two resist - for different reasons:
+
+- **C5 (shared uniqueness)** is architectural: no local relation can observe
+  another domain. The audit demonstrates this by showing that a domain's validity
+  is invariant under arbitrary changes to the other domain's state.
+- **C2 (semantic reflexivity)** is the kernel: it constrains which relation is
+  consulted, and that choice is made above every relation. Hold the relations
+  fixed and change only the kernel's evaluation rule; the same transition flips
+  from rejected to accepted.
+
+So the kernel is not empty. It is exactly one rule - **evaluate a transition under
+the semantics in force before it** - plus a free relation. Everything else is
+definition, permission, or architecture. `docs/kernel-reduction-audit.md`.
+
+This is a smaller claim than the freeze makes, and a more useful one: it is
+specific, executable, and it names the single thing that must not be changed
+casually.
+
 ## Repository Structure
 
 ~~~text
 .
 ├── README.md
-├── SPEC.md                      v0.1 kernel (frozen)
-├── SPEC-v0.2-candidate.md       v0.2 kernel (candidate)
+├── SPEC.md                      Kernel v0.2 (ATP-0002 freeze)
+├── SPEC-v0.1-historical.md      Kernel v0.1 (frozen baseline)
+├── SPEC-v0.2-candidate.md       the four-primitive intermediate
 ├── protocol.json
 ├── protocol-v0.2-candidate.json
 ├── CONTRIBUTING.md

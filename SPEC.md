@@ -1,412 +1,248 @@
 # Agent Transaction Protocol — Specification
 
-**Version:** Kernel v0.1  
-**Status:** Experimental Baseline
+**Version:** Kernel v0.2
+**Status:** Experimental / Research Freeze
+**Historical Baseline:** ATP-0001 / Kernel v0.1
 
 ## 1. Scope
 
-ATP defines a minimal protocol model for autonomous agents interacting through authoritative state.
+ATP defines a minimal semantic model for systems whose authoritative state evolves through domain-recognized transitions.
 
-The protocol does not prescribe:
+ATP does not prescribe:
 
 - agent cognition
 - model architecture
 - execution environment
-- tool usage
-- negotiation strategy
-- economic strategy
 - identity technology
 - consensus technology
 - governance structure
+- decentralization
+- economic model
+- trusted clock
+- verification mechanism
 
-It defines how protocol-recognized state can change.
+## 2. Kernel Model
 
-## 2. Kernel
+The current kernel hypothesis is:
 
-The current kernel contains five conceptual primitives:
+```text
+D = (S0, R0)
 
-1. State
-2. Transition
-3. Policy
-4. Evidence
-5. Decision
+R(S, X, C, S') -> valid / invalid
+```
 
-These are intentionally minimal.
+Where:
 
-### 2.1 State
+- `D` is a domain instance.
+- `S0` is the initial semantic state.
+- `R0` is the initial transition interpretation.
+- `S` is a domain state/context used to interpret future evolution.
+- `X` is an input, trigger, request, event, or proposal.
+- `C` is additional context supplied to interpretation.
+- `S'` is a candidate successor state.
 
-State is the authoritative protocol-recognized condition at a point in the protocol history.
+`R` may be deterministic or nondeterministic. A domain may recognize multiple valid successors.
 
-Examples of state schemas include:
+## 3. Core Semantic Boundary
 
-- identity records
-- capability allocation
+> A protocol-recognized state effect must be justified by the domain's transition semantics.
+
+An external assertion, agent decision, evidence item, signature, oracle result, or consensus result does not automatically become authoritative state merely because it exists.
+
+## 4. Semantic Evolution
+
+Semantics may itself evolve:
+
+```text
+R0 -> R1 -> R2
+```
+
+The transition that introduces `R1` must be recognized under the preceding semantic context `R0`.
+
+A semantic update is therefore itself a state evolution.
+
+## 5. Historical Integrity
+
+A recognized state effect may later be disputed, superseded, or reclassified through new transitions.
+
+Example:
+
+```text
+S1: O1 = VERIFIED
+S1 -> S2: O1 = DISPUTED
+```
+
+The later state does not silently erase the earlier recognized transition.
+
+The invariant is attribution and continuity of recognized history, not permanent immutability of every judgment.
+
+## 6. State Schemas
+
+The following may be represented as higher-level state schemas:
+
+- agents
+- identities
 - commitments
+- capabilities
 - balances
 - ownership
 - liabilities
 - reservations
 - outcomes
-- reputation records
+- reputation
+- policy data
+- governance data
+- domain relationships
 
-These schemas are not automatically kernel primitives.
+The kernel does not prescribe their internal schemas.
 
-A statement does not become authoritative merely because an agent asserts it.
+## 7. Inputs and Context
 
-It becomes protocol state through a valid state transition.
+`X` does not imply an Agent.
 
-### 2.2 Transition
+Possible inputs include:
 
-A Transition changes protocol state.
+- agent request
+- human action
+- program event
+- timer
+- scheduler
+- oracle result
+- sensor observation
+- internal rule trigger
+- cross-domain reference
 
-Abstractly:
+`C` may include evidence, external observations, prior records, time information, or other context.
 
-```text
-State_n + Transition → State_n+1
-```
+## 8. Atomicity
 
-A transition should conceptually contain:
+Atomicity is a domain-level property of recognized state evolution.
 
-```text
-actor
-intent
-preconditions
-inputs
-authorization
-effects
-```
-
-The exact serialization is intentionally unspecified at v0.1.
-
-A protocol-relevant state change MUST NOT occur through an untracked direct mutation.
-
-### 2.3 Policy
-
-Policy determines whether a proposed transition is authorized under current protocol rules.
-
-Abstractly:
+A domain may recognize a coupled transition only as a complete successor:
 
 ```text
-Policy(State, Transition, Evidence?, Decision?) → ALLOW | REJECT
+S -> S'
 ```
 
-Policy is the authority boundary.
+External execution may remain partially completed.
 
-A Decision does not itself grant authority.
+Therefore protocol atomicity does not imply physical atomicity.
 
-### 2.4 Evidence
+## 9. Conflict and Selection
 
-Evidence is information presented to support a decision or transition.
-
-Evidence may include:
-
-- execution traces
-- signed messages
-- external observations
-- measurements
-- logs
-- outputs
-- attestations
-- references to prior outcomes
-
-Evidence is not equivalent to truth.
-
-The protocol may determine whether evidence satisfies a specified verification process, but cannot assume that every evidence source is truthful.
-
-### 2.5 Decision
-
-Decision is a judgment over State and/or Evidence.
-
-Examples:
-
-- whether a deliverable satisfies a specification
-- whether evidence is sufficient
-- whether a dispute condition is met
-- whether an outcome should be recognized
-
-A Decision may be produced by:
-
-- an agent
-- a model
-- a human
-- a deterministic rule engine
-- an oracle
-- multiple judges
-
-The protocol does not require a particular decision-maker.
-
-Decision and authority are separate:
+Multiple valid successors are permitted:
 
 ```text
-Decision ≠ Authority
+S0
+├── S1
+└── S2
 ```
 
-A Decision can become authoritative only when Policy permits a corresponding Transition.
+Conflict is a relation between competing evolutions.
 
-## 3. Canonical Transaction Model
+Selection mechanisms, including consensus, may choose a canonical successor but are not required by the kernel.
 
-An Agent Transaction is:
+## 10. Time
 
-> A policy-authorized state transition over protocol state, potentially mediated by evidence and judgment.
+Time may be represented as state, context, or explicit transitions such as `Tick`.
 
-Canonical form:
+A domain defines which time sources it recognizes.
+
+## 11. Finality
+
+Finality is a domain property produced by transition and selection semantics.
+
+The kernel does not require a universal finality rule.
+
+## 12. Irreversibility
+
+A protocol may permit or prohibit reversal of a state effect. Physical execution may remain irreversible regardless of protocol state.
+
+## 13. Cross-Domain Recognition
+
+A state effect recognized by domain X is not automatically recognized by domain Y.
+
+A typical cross-domain path is:
 
 ```text
-Agent
-  ↓
-proposes Transition
-  ↓
-State + Evidence
-  ↓
-Decision (optional)
-  ↓
-Policy
-  ↓
-Transition authorized?
-  ↓
-State'
+X State Evolution
+      |
+      v
+Reference / Evidence / Record
+      |
+      v
+Y Context
+      |
+      v
+Y Transition Interpretation
+      |
+      v
+Y State Effect
 ```
 
-## 4. Execution
+Authority, finality, and recognition are domain-scoped.
 
-Execution is outside the kernel.
+## 14. Shared Invariants
 
-An agent may:
+If independent domains must enforce a shared uniqueness invariant, the invariant requires a shared semantic domain.
 
-- call an LLM
-- call APIs
-- run code
-- use hardware
-- delegate work
-- negotiate with another agent
-- use humans
-- perform arbitrary internal planning
+The shared domain may be centralized or decentralized.
 
-The protocol does not need to reproduce the execution process.
+This is an architecture choice, not a kernel primitive.
 
-Instead, execution can produce Evidence and/or a resulting state transition.
+## 15. Truth Boundary
 
-## 5. Commitment
+ATP does not establish objective physical truth.
 
-A Commitment is a higher-level state schema.
+A protocol state is authoritative only within the scope defined by its domain semantics.
 
-It represents an obligation or promise concerning future behavior or an outcome.
+Different domains may maintain different states concerning the same external object.
 
-An accepted commitment MUST NOT be edited in place.
+## 16. Higher-Level Concepts
 
-Changes are represented through new transitions.
+### Agent Transaction
 
-Example:
+A higher-level composition of domain-recognized state evolutions representing an agent-oriented interaction.
 
-```text
-C1
-A → B
-deliver X before T
-```
+### Commitment
 
-Amendment:
+A state schema representing obligations, requirements, deadlines, dependencies, acceptance rules, liability, and related terms.
 
-```text
-C1
- ↓
-Amendment C1.1
- ↓
-new state
-```
+### Capability
 
-Cancellation is also a transition, not deletion.
+A state schema representing allocatable capacity, such as total/available/reserved/consumed.
 
-## 6. Capability
+### Outcome
 
-Capability is a state schema representing an agent's ability or allocatable resource.
+A state schema representing a domain-recognized result and its provenance/evidence context.
 
-Capability may have:
+### Settlement
 
-```text
-total
-available
-reserved
-consumed
-```
+A class of transitions applying consequences to commitments, balances, liabilities, capabilities, ownership, or related state.
 
-The protocol does not need to define every capability type.
+### Consensus
 
-Examples:
+A selection mechanism over valid successor candidates.
 
-- GPU-hours
-- API quota
-- storage
-- human review capacity
-- data access
-- execution authority
+### Verification
 
-Over-commitment is a policy/economic question unless experiments demonstrate that capability accounting itself requires a kernel primitive.
+A domain-specific recognition mechanism. It may use recomputation, proofs, attestations, human judgment, AI judgment, hardware attestation, or other mechanisms.
 
-## 7. Outcome
+## 17. Non-Goals
 
-An Outcome is a protocol-recognized state representing the result of an execution or verification process.
+ATP does not guarantee:
 
-It may reference:
+- truthful evidence
+- correct AI judgment
+- honest agents
+- global authority
+- global identity
+- global consensus
+- decentralization
+- physical-world consistency
+- physical reversibility
+- universal finality
 
-```text
-producer
-specification
-evidence
-decision
-verification status
-provenance
-timestamp
-```
+## 18. Research Status
 
-An Outcome is not metaphysical truth.
-
-Possible verification states include:
-
-```text
-PROVEN
-DISPROVEN
-UNPROVEN
-CONFLICTED
-UNKNOWN
-```
-
-An outcome MUST NOT be silently deleted.
-
-A later transition may supersede, invalidate, or dispute it while preserving history.
-
-## 8. Settlement
-
-Settlement is a class of state transitions that apply consequences to commitments, outcomes, balances, liabilities, ownership, or other state.
-
-Settlement does not necessarily imply money.
-
-Examples:
-
-- releasing a reservation
-- recognizing a completed commitment
-- transferring an asset
-- recording a liability
-- paying currency
-- returning collateral
-
-## 9. Currency
-
-Currency is a higher-level state schema.
-
-A currency balance can be represented as state:
-
-```text
-balance
-locked_balance
-```
-
-A payment is a state transition.
-
-Credit, debt, collateral, futures, insurance, and markets are higher-level protocols.
-
-The kernel does not require currency.
-
-## 10. Identity
-
-Identity is represented as state and interpreted through Policy.
-
-ATP does not mandate:
-
-- public-key identity
-- DID
-- account-based identity
-- biometric identity
-- human identity
-- agent-specific identity technology
-
-## 11. Disputes
-
-A dispute is not a kernel primitive.
-
-A typical dispute flow is:
-
-```text
-Existing State
-    ↓
-New Evidence
-    ↓
-Decision
-    ↓
-Policy
-    ↓
-Transition
-    ↓
-Revised State
-```
-
-History remains intact.
-
-## 12. Finality
-
-Finality means that under the protocol's rules, normal mechanisms can no longer produce an equally authoritative competing state transition.
-
-Finality is protocol-specific.
-
-It does not mean that the resulting state is philosophically or physically infallible.
-
-## 13. Core Invariants
-
-### I1 — No Direct State Mutation
-
-All authoritative state changes occur through valid transitions.
-
-### I2 — State Changes Are Traceable
-
-A state change must be attributable to a transition and its relevant inputs.
-
-### I3 — Decision Does Not Imply Authority
-
-A judgment only has authority through Policy.
-
-### I4 — Evidence Does Not Equal Truth
-
-Evidence is an input to epistemic processes, not an automatic guarantee of truth.
-
-### I5 — History Is Not Silently Deleted
-
-Invalidation, reversal, amendment, and dispute create new state rather than rewriting history.
-
-### I6 — Execution Is Not the Kernel
-
-Internal execution remains outside the protocol unless an observable result becomes protocol state.
-
-### I7 — Policy Defines Authority
-
-The protocol boundary is determined by valid state transitions and the policy governing them.
-
-### I8 — Minimality
-
-A new primitive must not be added when existing primitives can express the behavior.
-
-## 14. Evolution Rule
-
-For any proposed feature:
-
-```text
-Requirement
-    ↓
-Can State + Transition express it?
-    ↓
-Can Policy express authorization?
-    ↓
-Can Evidence + Decision express required judgment?
-    ↓
-If yes → no new primitive
-    ↓
-If no → test extension-layer representation
-    ↓
-Only then → consider kernel revision
-```
-
-## 15. Baseline Position
-
-The v0.1 kernel is a research hypothesis.
-
-Its correctness is not assumed.
-
-Its purpose is to be attacked.
+v0.2 is a frozen research conclusion for the first kernel-reduction stage. It is not a production protocol and does not claim that the current kernel is final.

@@ -9,9 +9,10 @@
     "node": ">=22.6"
   },
   "scripts": {
-    "test": "node --test test/kernel.test.ts test/invariants.test.ts test/experiments.test.ts test/judge-bench.test.ts",
+    "test": "node --test test/kernel.test.ts test/invariants.test.ts test/experiments.test.ts test/judge-bench.test.ts test/reduction.test.ts",
     "experiments": "node experiments/v0.2-review/run.ts",
     "bench": "node experiments/judge-bench/run.ts",
+    "reduction": "node experiments/reduction/run.ts",
     "verify": "npm run experiments && npm test"
   }
 }

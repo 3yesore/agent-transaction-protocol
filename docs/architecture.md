@@ -1,139 +1,118 @@
 # ATP Architecture
 
-## 1. Layering
+## Current Research Architecture
 
-ATP should be understood as a protocol kernel plus extension layers.
-
-```text
-┌─────────────────────────────────────┐
-│ Applications / Agent Economies      │
-├─────────────────────────────────────┤
-│ Markets / Credit / Governance       │
-├─────────────────────────────────────┤
-│ Commitment / Capability / Outcome   │
-│ Settlement / Currency               │
-├─────────────────────────────────────┤
-│ ATP Kernel                           │
-│ State / Transition / Policy         │
-│ Evidence / Decision                 │
-└─────────────────────────────────────┘
-```
-
-The lower layer should not absorb semantics that can safely remain above it.
-
-## 2. Agent Boundary
+ATP is best understood as a semantic state-evolution layer.
 
 ```text
-┌──────────── Agent ─────────────┐
-│ reasoning                      │
-│ planning                       │
-│ memory                         │
-│ tools                          │
-│ execution                      │
-│ negotiation                    │
-└──────────────┬─────────────────┘
-               │ proposes / observes
-               ▼
-┌────────── ATP Protocol ──────────┐
-│ State                            │
-│ Transition                       │
-│ Policy                           │
-│ Evidence                         │
-│ Decision                         │
-└──────────────────────────────────┘
+                 Domain
+          ┌──────────────────┐
+          │ Initial State    │
+          │ Initial Semantics│
+          └────────┬─────────┘
+                   │
+                   ▼
+          Input / Context
+                   │
+                   ▼
+       Transition Interpretation
+             │            │
+          invalid        valid
+             │            │
+             │            ▼
+             │       Successor State
+             │            │
+             │            ▼
+             │       New Semantics
+             │            │
+             └────────────┘
 ```
 
-The agent controls its internal process.
+## Layers
 
-The protocol controls what becomes authoritative state.
-
-## 3. Commitment Graph
-
-A higher-level application can model:
+### Kernel
 
 ```text
-A
-│
-C1
-│
-B
-├── C2 → C
-└── C3 → D
+D = (S0, R0)
+R(S, X, C, S') -> valid / invalid
 ```
 
-The graph is represented through state and transitions.
+### State Schemas
 
-A commitment may be:
+Higher-level data structures may represent:
 
-- created
-- accepted
-- reserved
-- delegated
-- split
-- amended
-- canceled
-- fulfilled
-- disputed
-- settled
-
-These are state-transition patterns rather than mandatory kernel primitives.
-
-## 4. Work Graph
-
-A useful application-level flow is:
-
-```text
-Commitment
-    ↓
-Execution
-    ↓
-Evidence
-    ↓
-Decision
-    ↓
-Outcome
-    ↓
-Settlement
-    ↓
-New Commitment
-```
-
-Execution remains outside the kernel.
-
-## 5. Economic Layer
-
-Currency is optional.
-
-An agent economy may instead exchange:
-
-- data
-- compute
-- API access
-- verification
-- labor
+- identity
+- agents
+- commitments
 - capabilities
-- future commitments
+- resources
+- balances
+- liabilities
+- outcomes
+- reputation
+- governance
+- policy data
 
-Currency can act as:
+### Recognition Mechanisms
 
-- unit of account
-- settlement medium
-- collateral
-- capital
-- pricing reference
+Domains may use:
 
-These are higher-level protocols.
+- deterministic execution
+- proofs
+- signatures
+- attestations
+- human review
+- AI judgment
+- oracles
+- hardware attestation
+- committees
+- consensus
 
-## 6. Epistemic Boundary
+These mechanisms do not automatically create authority. Their outputs become state effects only when recognized by the domain semantics.
 
-ATP explicitly distinguishes:
+### Selection Mechanisms
+
+When multiple valid successors exist, a domain may select one through:
+
+- consensus
+- priority rules
+- market mechanisms
+- authority decisions
+- timestamps
+- human selection
+- deterministic ordering
+
+Selection is optional and domain-specific.
+
+## Cross-Domain Architecture
 
 ```text
-Evidence ≠ Truth
-Decision ≠ Authority
-Outcome ≠ Metaphysical Truth
+Domain A
+State -> recognized record
+              |
+              v
+       reference/context
+              |
+              v
+Domain B
+Context -> interpretation -> State'
 ```
 
-This distinction is fundamental.
+A cross-domain reference does not transfer authority automatically.
 
-The protocol can record what its rules recognize without claiming that the protocol has solved objective truth.
+## Shared Invariants
+
+If two domains must agree that a unique resource can only be allocated once, a shared semantic domain is required.
+
+```text
+             Shared Invariant Domain
+                 /           \
+                /             \
+           Domain A         Domain B
+```
+
+The shared domain may be centralized, decentralized, hardware-controlled, or institutionally governed.
+
+## Boundary
+
+ATP constrains protocol-recognized state evolution. It does not directly control external execution or physical reality.

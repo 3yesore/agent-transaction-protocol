@@ -1,16 +1,35 @@
 {
   "name": "Agent Transaction Protocol",
   "abbreviation": "ATP",
-  "baseline": "ATP-0001",
-  "kernel_version": "0.1",
+  "historical_baseline": "ATP-0001",
+  "kernel_version": "0.2",
   "status": "experimental",
+  "kernel_model": "D = (S0, R0); R(S, X, C, S') -> valid / invalid",
   "kernel_primitives": [
-    "State",
-    "Transition",
-    "Policy",
-    "Evidence",
-    "Decision"
+    "initial semantic state",
+    "state-evolution relation"
   ],
-  "method": "adversarial evolution",
-  "core_invariant": "Any protocol-relevant state change must occur through a valid state transition."
+  "derived_or_higher_level": [
+    "agent",
+    "identity",
+    "policy",
+    "evidence",
+    "decision",
+    "commitment",
+    "capability",
+    "outcome",
+    "settlement",
+    "currency",
+    "consensus",
+    "reputation",
+    "governance",
+    "transaction",
+    "domain"
+  ],
+  "core_invariants": [
+    "A recognized state effect must be attributable to domain-relative transition semantics.",
+    "A semantic update must itself be recognized under the preceding semantic context.",
+    "Recognized historical evolution cannot be silently replaced as if it never occurred."
+  ],
+  "method": "adversarial evolution"
 }
