@@ -2,6 +2,8 @@
 
 > A research project exploring a minimal, machine-native transaction protocol for autonomous agents.
 
+[![CI](https://github.com/3yesore/agent-transaction-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/3yesore/agent-transaction-protocol/actions/workflows/ci.yml)
+
 **Status:** Experimental / Research
 **Frozen historical baseline:** ATP-0001 / Kernel v0.1 - `RFC/ATP-0001-kernel-baseline.md`, `SPEC-v0.1-historical.md`
 **Current research version:** ATP-0002 / Kernel v0.2 (freeze) - `SPEC.md`, `RFC/ATP-0002-state-evolution-kernel.md`
