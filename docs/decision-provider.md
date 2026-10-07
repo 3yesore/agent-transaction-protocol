@@ -99,6 +99,42 @@ It writes `experiments/results/live-model-check.md`. This validates the
 small general-purpose model asked for a typed decision is a plumbing test, not a
 Jev-class decision model.
 
+## Measured against a real model
+
+Hardware: RTX 3060 Laptop 6GB, Ryzen 9 5900HX, 32GB RAM. Model: `qwen2.5:1.5b`
+(986 MB) served by Ollama 0.20.7. Generated report:
+`experiments/results/live-model-check.md`.
+
+| Scenario | Expected | Conclusion | Latency | Transport calls | Transition |
+|----------|----------|------------|---------|-----------------|------------|
+| clear delivery | AFFIRM | AFFIRM | 2.4 s | 1 | committed |
+| clear non-delivery | DENY | DENY | 2.4 s | 1 | rejected |
+| ambiguous evidence | any | AFFIRM | 2.0 s | 1 | committed |
+
+Cold start including model load was 72 s; steady-state decisions are about 2 s.
+
+Three observations:
+
+1. **Constrained output works.** All three replies conformed on the first
+   attempt, so the retry path never fired. Ollama's JSON-schema `format` plus an
+   explicit prompt was sufficient for a 1.5B model.
+2. **Confidence is omitted unless it is required.** The schema marks it optional
+   and the model left it out in all three cases. A protocol that wants calibrated
+   confidence has to require the field; leaving it optional yields null.
+3. **A well-formed Decision can rest on a bad basis, and the rationale is what
+   exposes it.** Asked about deliberately ambiguous evidence whose only witness
+   was the supplier, the model affirmed: "The supplier claims to have delivered
+   the artifact described by the commitment, which aligns with their role as a
+   witness in this transaction." The transition was then authorized. The judgment
+   conformed to the schema; the reasoning credited an interested party. That is
+   exactly the I4 boundary - the protocol recorded a weak judgment faithfully
+   rather than pretending it was truth - and it is visible only because a
+   rationale was mandatory. A bare score would have hidden it.
+
+This validates the interface, not the judgment. A 1.5B general-purpose model is a
+plumbing test; it is not a Jev-class decision model, and nothing above should be
+read as a quality benchmark.
+
 ## On Jev and its reproductions
 
 Jev itself is closed-weight; only its toolchain is public. The open

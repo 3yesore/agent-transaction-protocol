@@ -52,7 +52,7 @@ const scenarios: Scenario[] = [
   },
   {
     name: "ambiguous evidence",
-    expect: "any outcome, but a stated basis",
+    expect: "any",
     materials: [{ label: "note", content: "the artifact was produced but its hash was never recorded, and the only witness is the supplier" }],
   },
 ];
@@ -94,10 +94,11 @@ async function main(): Promise<void> {
   lines.push("Model: **" + model + "** at " + baseUrl);
   lines.push("Started: " + new Date().toISOString());
   lines.push("");
-  lines.push("| Scenario | Expected | Conclusion | Confidence | Latency | Transport calls | Transition |");
-  lines.push("|----------|----------|------------|------------|---------|-----------------|------------|");
+  lines.push("| Scenario | Expected | Conclusion | Confidence | Latency | Transport calls | Transition | Matched |");
+  lines.push("|----------|----------|------------|------------|---------|-----------------|------------|---------|");
 
   let failures = 0;
+  let confidenceMissing = 0;
   for (let i = 0; i < scenarios.length; i++) {
     const scenario = scenarios[i];
     const domain = domainFor("live-" + (i + 1));
@@ -129,6 +130,7 @@ async function main(): Promise<void> {
       const { response } = await decideFor(domain, provider, request);
       const elapsed = Date.now() - started;
       const result = domain.propose(proposal);
+      const matched = scenario.expect === "any" ? true : response.conclusion === scenario.expect;
       console.log("");
       console.log("[" + scenario.name + "] " + elapsed + " ms, " + counter.calls() + " call(s)");
       console.log("  raw      : " + counter.lastRaw().replace(/\s+/g, " ").slice(0, 300));
@@ -136,7 +138,7 @@ async function main(): Promise<void> {
       console.log("  rationale: " + response.rationale);
       console.log("  led to   : committed=" + result.committed);
       lines.push(
-        "| " + scenario.name + " | " + scenario.expect + " | " + response.conclusion + " | " + String(response.confidence) + " | " + elapsed + " ms | " + counter.calls() + " | " + (result.committed ? "committed" : "rejected") + " |",
+        "| " + scenario.name + " | " + scenario.expect + " | " + response.conclusion + " | " + String(response.confidence) + " | " + elapsed + " ms | " + counter.calls() + " | " + (result.committed ? "committed" : "rejected") + " | " + (matched ? "yes" : "**NO**") + " |",
       );
       lines.push("");
       lines.push("**" + scenario.name + "** rationale: " + response.rationale);
@@ -147,13 +149,19 @@ async function main(): Promise<void> {
         failures++;
       }
       const invariantFailures = checkInvariants(domain).filter((r) => r.status === "FAIL");
-      if (!result.committed || !domain.verify().ok || invariantFailures.length > 0) failures++;
+      if (!domain.verify().ok || invariantFailures.length > 0) failures++;
+      if (response.confidence === null) confidenceMissing++;
+      // A rejected transition is not a failure: a DENY is supposed to block it.
+      if (!matched) {
+        console.log("  UNEXPECTED: model concluded " + response.conclusion + ", expected " + scenario.expect);
+        failures++;
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.log("");
       console.log("[" + scenario.name + "] FAILED after " + (Date.now() - started) + " ms: " + message);
       console.log("  raw: " + counter.lastRaw().replace(/\s+/g, " ").slice(0, 300));
-      lines.push("| " + scenario.name + " | " + scenario.expect + " | n/a | n/a | " + (Date.now() - started) + " ms | " + counter.calls() + " | **no conforming decision** |");
+      lines.push("| " + scenario.name + " | " + scenario.expect + " | n/a | n/a | " + (Date.now() - started) + " ms | " + counter.calls() + " | **no conforming decision** | n/a |");
       lines.push("");
       lines.push("**" + scenario.name +"** failed: " + message);
       lines.push("");
@@ -162,6 +170,10 @@ async function main(): Promise<void> {
   }
 
   lines.push("");
+  if (confidenceMissing > 0) {
+    lines.push("Confidence was omitted in " + confidenceMissing + " of " + scenarios.length + " cases. The schema marks it optional, so a model that is not asked for it does not volunteer one.");
+    lines.push("");
+  }
   lines.push(failures === 0 ? "All scenarios produced a conforming Decision." : failures + " scenario(s) did not conform.");
   lines.push("");
   const outDir = join(dirname(fileURLToPath(import.meta.url)), "results");
